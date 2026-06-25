@@ -672,3 +672,11 @@ label{display:block;margin:11px 0 7px;font-weight:700;font-size:14px}
     min-height:600px;
   }
 }
+
+/* V34 : paramètres allégés */
+.settings-dropdown-body{
+  padding:12px;
+}
+.settings-dropdown .merged-palette-panel{
+  margin-bottom:0;
+}

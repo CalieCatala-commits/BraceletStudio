@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'braceletStudioByCalieV33';
+const STORAGE_KEY = 'braceletStudioByCalieV34';
 const DEFAULT_COLORS = ['#A8D8F0','#3D5CB3','#EF0B0B','#90EAAE','#FFFFFF','#26408B','#F6C9D9','#7FC8B7','#111827','#F4E8B2','#7A4CBC','#13A4C8'];
 
 const state = {
@@ -795,7 +795,7 @@ function renderPattern() {
       drawNode(x,y,visual.fill,type,idx++);
     }
   }
-  svgText(svg,'Version 33 · Correctif patron · Créé avec Calie',marginL,contentH-42,'footer-note');
+  svgText(svg,'Version 34 · Paramètres allégés · Créé avec Calie',marginL,contentH-42,'footer-note');
 }
 function onKnotClick(idx) {
   const knots = buildKnotList();
@@ -918,8 +918,8 @@ function renderThreadAssignments() {
   }
 }
 function renderInfo() {
-  $('#threadsValue').textContent=state.threads;
-  $('#rowsValue').textContent=state.rows;
+  const threadsValue=$('#threadsValue'); if (threadsValue) threadsValue.textContent=state.threads;
+  const rowsValue=$('#rowsValue'); if (rowsValue) rowsValue.textContent=state.rows;
   const motifWidthValue=$('#motifWidthValue'); if (motifWidthValue) motifWidthValue.textContent=state.motifWidth;
   const motifHeightValue=$('#motifHeightValue'); if (motifHeightValue) motifHeightValue.textContent=state.motifHeight;
   const showRowsEl=$('#showRows'); if (showRowsEl) showRowsEl.checked=state.showRows;
@@ -960,16 +960,20 @@ function renderAll() {
 }
 function exportPreviewPng() {
   const link=document.createElement('a');
-  link.download='bracelet-studio-by-calie-v33.png';
+  link.download='bracelet-studio-by-calie-v34.png';
   link.href=previewCanvas.toDataURL('image/png');
   link.click();
 }
 function bindUI() {
   document.querySelectorAll('.typeBtn').forEach(btn=>btn.onclick=()=>{state.type=btn.dataset.type;resetWeave();renderAll();});
-  $('#threadsMinus').onclick=()=>{state.threads=clamp(state.threads-1,3,40);resetWeave();renderAll();};
-  $('#threadsPlus').onclick=()=>{state.threads=clamp(state.threads+1,3,40);resetWeave();renderAll();};
-  $('#rowsMinus').onclick=()=>{state.rows=clamp(state.rows-1,4,90);resetWeave();renderAll();};
-  $('#rowsPlus').onclick=()=>{state.rows=clamp(state.rows+1,4,90);resetWeave();renderAll();};
+  const threadsMinus=$('#threadsMinus');
+  const threadsPlus=$('#threadsPlus');
+  const rowsMinus=$('#rowsMinus');
+  const rowsPlus=$('#rowsPlus');
+  if (threadsMinus) threadsMinus.onclick=()=>{state.threads=clamp(state.threads-1,3,40);resetWeave();renderAll();};
+  if (threadsPlus) threadsPlus.onclick=()=>{state.threads=clamp(state.threads+1,3,40);resetWeave();renderAll();};
+  if (rowsMinus) rowsMinus.onclick=()=>{state.rows=clamp(state.rows-1,4,90);resetWeave();renderAll();};
+  if (rowsPlus) rowsPlus.onclick=()=>{state.rows=clamp(state.rows+1,4,90);resetWeave();renderAll();};
   const motifWidthMinus=$('#motifWidthMinus');
   const motifWidthPlus=$('#motifWidthPlus');
   const motifHeightMinus=$('#motifHeightMinus');
