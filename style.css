@@ -544,7 +544,7 @@ label{display:block;margin:11px 0 7px;font-weight:700;font-size:14px}
   margin-top:6px;
 }
 
-/* V32 correctif : mise en page iPad stable */
+/* V33 correctif : patron restauré + mise en page iPad stable */
 .app-grid{
   grid-template-columns:340px minmax(0, 1fr) !important;
   gap:16px;

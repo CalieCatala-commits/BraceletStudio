@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'braceletStudioByCalieV32';
+const STORAGE_KEY = 'braceletStudioByCalieV33';
 const DEFAULT_COLORS = ['#A8D8F0','#3D5CB3','#EF0B0B','#90EAAE','#FFFFFF','#26408B','#F6C9D9','#7FC8B7','#111827','#F4E8B2','#7A4CBC','#13A4C8'];
 
 const state = {
@@ -795,7 +795,7 @@ function renderPattern() {
       drawNode(x,y,visual.fill,type,idx++);
     }
   }
-  svgText(svg,'Version 32 · Correctif iPad · Créé avec Calie',marginL,contentH-42,'footer-note');
+  svgText(svg,'Version 33 · Correctif patron · Créé avec Calie',marginL,contentH-42,'footer-note');
 }
 function onKnotClick(idx) {
   const knots = buildKnotList();
@@ -922,9 +922,9 @@ function renderInfo() {
   $('#rowsValue').textContent=state.rows;
   const motifWidthValue=$('#motifWidthValue'); if (motifWidthValue) motifWidthValue.textContent=state.motifWidth;
   const motifHeightValue=$('#motifHeightValue'); if (motifHeightValue) motifHeightValue.textContent=state.motifHeight;
-  $('#showRows').checked=state.showRows;
-  $('#showLetters').checked=state.showLetters;
-  $('#showPreviewGrid').checked=state.showPreviewGrid;
+  const showRowsEl=$('#showRows'); if (showRowsEl) showRowsEl.checked=state.showRows;
+  const showLettersEl=$('#showLetters'); if (showLettersEl) showLettersEl.checked=state.showLetters;
+  const showPreviewGridEl=$('#showPreviewGrid'); if (showPreviewGridEl) showPreviewGridEl.checked=state.showPreviewGrid;
   const pss=$('#previewStyleSelect'); if (pss) pss.value = state.previewStyle;
   document.querySelectorAll('.typeBtn').forEach(btn=>btn.classList.toggle('active',btn.dataset.type===state.type));
   $('#summaryLabel').innerHTML=`Normal · <b>${state.threads} fils</b> · ${state.rows} rangées · ${state.colorCount} couleurs`;
@@ -960,7 +960,7 @@ function renderAll() {
 }
 function exportPreviewPng() {
   const link=document.createElement('a');
-  link.download='bracelet-studio-by-calie-v32.png';
+  link.download='bracelet-studio-by-calie-v33.png';
   link.href=previewCanvas.toDataURL('image/png');
   link.click();
 }
@@ -997,13 +997,19 @@ function bindUI() {
     resetWeave();
     renderAll();
   };
-  $('#showRows').onchange=e=>{state.showRows=e.target.checked;renderAll();};
-  $('#showLetters').onchange=e=>{state.showLetters=e.target.checked;renderAll();};
-  $('#showPreviewGrid').onchange=e=>{state.showPreviewGrid=e.target.checked;renderAll();};
+  const showRowsInput=$('#showRows');
+  const showLettersInput=$('#showLetters');
+  const showPreviewGridInput=$('#showPreviewGrid');
+  if (showRowsInput) showRowsInput.onchange=e=>{state.showRows=e.target.checked;renderAll();};
+  if (showLettersInput) showLettersInput.onchange=e=>{state.showLetters=e.target.checked;renderAll();};
+  if (showPreviewGridInput) showPreviewGridInput.onchange=e=>{state.showPreviewGrid=e.target.checked;renderAll();};
   const pss=$('#previewStyleSelect'); if (pss) pss.onchange=e=>{state.previewStyle=e.target.value; renderAll();};
-  $('#newBtn').onclick=()=>{if(confirm('Créer un nouveau motif ?')){setPreset('diamond');}};
-  $('#saveBtn').onclick=()=>{saveState();alert('Projet sauvegardé sur cet iPad / navigateur.');};
-  $('#exportBtn').onclick=exportPreviewPng;
+  const newBtn=$('#newBtn');
+  if (newBtn) newBtn.onclick=()=>{if(confirm('Créer un nouveau motif ?')){setPreset('diamond');}};
+  const saveBtn=$('#saveBtn');
+  if (saveBtn) saveBtn.onclick=()=>{saveState();alert('Projet sauvegardé sur cet iPad / navigateur.');};
+  const exportBtn=$('#exportBtn');
+  if (exportBtn) exportBtn.onclick=exportPreviewPng;
   const editColorsToggle=$('#editColorsToggle');
   if (editColorsToggle) {
     editColorsToggle.onclick=()=>{state.editColors=!state.editColors;if(state.editColors)state.editKnots=false;renderAll();};
