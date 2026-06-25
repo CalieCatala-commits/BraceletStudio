@@ -293,3 +293,8 @@ label{display:block;margin:11px 0 7px;font-weight:700;font-size:14px}
 #previewCanvas{
   height:180px !important;
 }
+
+/* V19 : section Outils du patron interactif retirée */
+.center-column{
+  grid-template-rows:auto 1fr;
+}
