@@ -274,3 +274,8 @@ label{display:block;margin:11px 0 7px;font-weight:700;font-size:14px}
   .pattern-editor-shell{padding:42px 42px 48px}
   .edgeBtn{width:32px;height:32px;min-height:32px}
 }
+
+/* V15 : aperçu fidèle au nombre réel de nœuds */
+#previewCanvas{
+  height:160px !important;
+}

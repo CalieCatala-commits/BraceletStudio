@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'braceletStudioByCalieV14';
+const STORAGE_KEY = 'braceletStudioByCalieV15';
 const DEFAULT_COLORS = ['#A8D8F0','#3D5CB3','#EF0B0B','#90EAAE','#FFFFFF','#26408B','#F6C9D9','#7FC8B7','#111827','#F4E8B2','#7A4CBC','#13A4C8'];
 
 const state = {
@@ -210,53 +210,87 @@ function fillDiamond(ctx,cx,cy,w,h,fill,stroke='rgba(22,31,55,.32)') {
   ctx.restore();
 }
 function renderPreview() {
-  const {width,height,ctx}=setCanvasSize(previewCanvas,150);
+  const {width,height,ctx}=setCanvasSize(previewCanvas,160);
   ctx.clearRect(0,0,width,height);
-  ctx.fillStyle='#fff'; roundRect(ctx,0,0,width,height,20); ctx.fill();
 
-  const padX=22, padY=20;
+  ctx.fillStyle='#fff';
+  roundRect(ctx,0,0,width,height,20);
+  ctx.fill();
+
+  const padX=24, padY=18;
   const bandX=padX, bandY=padY, bandW=width-padX*2, bandH=height-padY*2;
-  ctx.save();
-  ctx.shadowColor='rgba(15,23,42,.12)'; ctx.shadowBlur=18; ctx.shadowOffsetY=5;
-  ctx.fillStyle='#fff'; roundRect(ctx,bandX,bandY,bandW,bandH,20); ctx.fill();
-  ctx.restore();
-
-  roundRect(ctx,bandX,bandY,bandW,bandH,20);
-  ctx.fillStyle='#fbfdff'; ctx.fill();
-  ctx.strokeStyle='#dfe4f4'; ctx.lineWidth=1.3; ctx.stroke();
 
   ctx.save();
-  roundRect(ctx,bandX,bandY,bandW,bandH,20); ctx.clip();
-
-  const rows = state.showPreviewGrid ? state.motifHeight : Math.min(7,state.motifHeight);
-  const tileH = Math.min(30, (bandH-22) / rows * 1.25);
-  const tileW = tileH*.92;
-  const xStep = tileW*.76;
-  const yStep = (bandH-24) / Math.max(1,rows-1);
-  const cols = Math.ceil(bandW/xStep)+4;
-  const startX = bandX + 14;
-  const startY = bandY + 12 + tileH/2;
-
-  for (let c=-2;c<cols;c++) {
-    for (let r=0;r<rows;r++) {
-      const cx = startX + c*xStep + (r%2 ? xStep*.5 : 0);
-      const cy = startY + r*yStep;
-      const previewRow = r % Math.max(1,state.rows);
-      const previewLeft = ((c + 50) % Math.max(1,state.threads-1) + Math.max(1,state.threads-1)) % Math.max(1,state.threads-1);
-      const color = state.colors[nodeColorIndex(previewRow, previewLeft)];
-      fillDiamond(ctx,cx,cy,tileW,tileH,color);
-    }
-  }
-
-  for (let i=0;i<6;i++) {
-    const yy=bandY+18+i*(bandH-36)/5;
-    ctx.strokeStyle='rgba(255,255,255,.26)'; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.moveTo(bandX+18,yy); ctx.lineTo(bandX+bandW-18,yy); ctx.stroke();
-  }
+  ctx.shadowColor='rgba(15,23,42,.10)';
+  ctx.shadowBlur=16;
+  ctx.shadowOffsetY=4;
+  ctx.fillStyle='#fff';
+  roundRect(ctx,bandX,bandY,bandW,bandH,18);
+  ctx.fill();
   ctx.restore();
 
-  roundRect(ctx,bandX,bandY,bandW,bandH,20);
-  ctx.strokeStyle='rgba(44,28,135,.16)'; ctx.lineWidth=1.2; ctx.stroke();
+  roundRect(ctx,bandX,bandY,bandW,bandH,18);
+  ctx.fillStyle='#fbfdff';
+  ctx.fill();
+  ctx.strokeStyle='#dfe4f4';
+  ctx.lineWidth=1.2;
+  ctx.stroke();
+
+  ctx.save();
+  roundRect(ctx,bandX,bandY,bandW,bandH,18);
+  ctx.clip();
+
+  // V15 : aperçu fidèle. On dessine un losange par vrai nœud du patron.
+  const knots = buildKnotList();
+  const usableX = bandW - 38;
+  const usableY = bandH - 28;
+  const x0 = bandX + 19;
+  const y0 = bandY + 14;
+  const rowStep = state.rows > 1 ? usableY / (state.rows - 1) : usableY;
+  const colStep = state.threads > 1 ? usableX / (state.threads - 1) : usableX;
+  const tileW = clamp(Math.min(colStep * .72, rowStep * .86, 24), 8, 24);
+  const tileH = tileW * 1.12;
+
+  // guides discrets pour bien voir que c’est une miniature du patron
+  ctx.strokeStyle='rgba(93,73,216,.055)';
+  ctx.lineWidth=1;
+  for (let t=0;t<state.threads;t++) {
+    const x=x0 + t*colStep;
+    ctx.beginPath();
+    ctx.moveTo(x,bandY+8);
+    ctx.lineTo(x,bandY+bandH-8);
+    ctx.stroke();
+  }
+
+  knots.forEach(k => {
+    const cx = x0 + (k.left + .5) * colStep;
+    const cy = y0 + k.row * rowStep;
+    const color = knotFill(k.left,k.row);
+    fillDiamond(ctx,cx,cy,tileW,tileH,color,'rgba(22,31,55,.30)');
+  });
+
+  // lignes lumineuses très légères pour l’effet bracelet
+  for (let i=0;i<4;i++) {
+    const yy=bandY+18+i*(bandH-36)/3;
+    ctx.strokeStyle='rgba(255,255,255,.22)';
+    ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.moveTo(bandX+18,yy);
+    ctx.lineTo(bandX+bandW-18,yy);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+
+  roundRect(ctx,bandX,bandY,bandW,bandH,18);
+  ctx.strokeStyle='rgba(44,28,135,.16)';
+  ctx.lineWidth=1.1;
+  ctx.stroke();
+
+  // petit compteur discret
+  ctx.fillStyle='rgba(23,32,51,.62)';
+  ctx.font='700 12px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
+  ctx.fillText(`${knots.length} losanges = ${knots.length} nœuds`, bandX + 14, bandY + bandH - 12);
 }
 
 function renderMotifEditor() {
@@ -364,7 +398,7 @@ function renderPattern() {
       drawNode(x,y,knotFill(left,r),type,idx++);
     }
   }
-  svgText(svg,'Version 14 · Patron interactif · Créé avec Calie',marginL,contentH-42,'footer-note');
+  svgText(svg,'Version 15 · Aperçu fidèle au patron · Créé avec Calie',marginL,contentH-42,'footer-note');
 }
 function onKnotClick(idx) {
   const knots = buildKnotList();
@@ -478,7 +512,7 @@ function renderAll() {
 }
 function exportPreviewPng() {
   const link=document.createElement('a');
-  link.download='bracelet-studio-by-calie-v14.png';
+  link.download='bracelet-studio-by-calie-v15.png';
   link.href=previewCanvas.toDataURL('image/png');
   link.click();
 }

@@ -1,5 +1,5 @@
-const CACHE = 'bracelet-studio-v14';
-const ASSETS = ['./','./index.html','./style.css?v=14','./script.js?v=14','./manifest.webmanifest'];
+const CACHE = 'bracelet-studio-v15';
+const ASSETS = ['./','./index.html','./style.css?v=15','./script.js?v=15','./manifest.webmanifest'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
 });
