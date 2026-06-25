@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#5f55d6" />
-  <title>Bracelet Studio by Calie — Version 26</title>
+  <title>Bracelet Studio by Calie — Version 27</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="style.css?v=26" />
+  <link rel="stylesheet" href="style.css?v=27" />
 </head>
 <body>
   <header class="topbar">
@@ -14,7 +14,7 @@
       <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
       <div>
         <h1>Bracelet Studio</h1>
-        <p>by Calie 💜 · V26 palette fusionnée à droite</p>
+        <p>by Calie 💜 · V27 mise en page claire</p>
       </div>
     </div>
     <div class="toolbar">
@@ -39,22 +39,15 @@
         </div>
       </section>
 
-      <section>
+      <section class="compact-params">
         <h2>Paramètres</h2>
-
-        <label>Type de bracelet</label>
-        <div class="segmented">
-          <button class="typeBtn active" data-type="normal">Normal</button>
-          <button class="typeBtn" data-type="alpha">Alpha</button>
-        </div>
-
-        <label>Nombre de fils</label>
+<label>Nombre de fils</label>
         <div class="stepper">
           <button id="threadsMinus">−</button>
           <strong id="threadsValue">9</strong>
           <button id="threadsPlus">+</button>
         </div>
-        <p class="muted mini">Pair ou impair accepté.</p>
+        <p class="muted mini compact-note">Pair ou impair accepté.</p>
 
         <label>Nombre de rangées</label>
         <div class="stepper">
@@ -94,11 +87,6 @@
         <label class="check"><input id="showLetters" type="checkbox" checked /> Afficher les lettres</label>
         <label class="check"><input id="showPreviewGrid" type="checkbox" checked /> Aperçu détaillé</label>
       </section>
-
-      <section class="aboutBox">
-        <h2>À propos</h2>
-        <p><b>Bracelet Studio by Calie</b><br>Version 26 — nombre de couleurs et couleurs des fils fusionnés dans un bloc à droite.</p>
-      </section>
     </aside>
 
     <section class="center-column">
@@ -130,32 +118,7 @@
 
     
     <aside class="card sidepanel-right">
-      <section class="merged-palette-panel">
-        <h2>Couleurs & fils</h2>
-        <label>Nombre de couleurs</label>
-        <div class="stepper">
-          <button id="colorsMinus">−</button>
-          <strong id="colorsValue">4</strong>
-          <button id="colorsPlus">+</button>
-        </div>
-        <div id="paletteList" class="palette-list"></div>
-        <input id="colorPicker" type="color" hidden />
-        <button id="addColorBtn" class="ghost full">+ Ajouter une couleur</button>
-
-        <p class="muted mini merged-palette-note">Choisis ensuite la couleur de départ de chaque fil : A, B, C…</p>
-        <div id="threadColorList" class="thread-color-list"></div>
-        <button id="resetThreadColorsBtn" class="ghost full">Réinitialiser les fils</button>
-      </section>
-      <section>
-        <h2>Légende</h2>
-        <div class="legend-grid">
-          <div class="legend-item"><div class="knot-icon-card" data-knot="f"></div><p>Nœud avant<br><small>gauche → droite</small></p></div>
-          <div class="legend-item"><div class="knot-icon-card" data-knot="b"></div><p>Nœud arrière<br><small>droite → gauche</small></p></div>
-          <div class="legend-item"><div class="knot-icon-card" data-knot="fb"></div><p>Avant-arrière</p></div>
-          <div class="legend-item"><div class="knot-icon-card" data-knot="bf"></div><p>Arrière-avant</p></div>
-        </div>
-      </section>
-<section class="weave-box">
+      <section class="weave-box weave-box-featured">
         <div class="weave-head">
           <h2>Mode tissage</h2>
           <span id="weaveStateBadge" class="state-pill active">Actif</span>
@@ -174,9 +137,26 @@
         </div>
         <button id="resetWeaveBtn" class="ghost full">Réinitialiser</button>
       </section>
+
+      <section class="merged-palette-panel">
+        <h2>Couleurs & fils</h2>
+        <label>Nombre de couleurs</label>
+        <div class="stepper">
+          <button id="colorsMinus">−</button>
+          <strong id="colorsValue">4</strong>
+          <button id="colorsPlus">+</button>
+        </div>
+        <div id="paletteList" class="palette-list"></div>
+        <input id="colorPicker" type="color" hidden />
+        <button id="addColorBtn" class="ghost full">+ Ajouter une couleur</button>
+
+        <p class="muted mini merged-palette-note">Choisis ensuite la couleur de départ de chaque fil : A, B, C…</p>
+        <div id="threadColorList" class="thread-color-list"></div>
+        <button id="resetThreadColorsBtn" class="ghost full">Réinitialiser les fils</button>
+      </section>
     </aside>
   </main>
 
-  <script src="script.js?v=26"></script>
+  <script src="script.js?v=27"></script>
 </body>
 </html>

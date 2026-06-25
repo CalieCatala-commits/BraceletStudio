@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'braceletStudioByCalieV26';
+const STORAGE_KEY = 'braceletStudioByCalieV27';
 const DEFAULT_COLORS = ['#A8D8F0','#3D5CB3','#EF0B0B','#90EAAE','#FFFFFF','#26408B','#F6C9D9','#7FC8B7','#111827','#F4E8B2','#7A4CBC','#13A4C8'];
 
 const state = {
@@ -51,6 +51,7 @@ function loadState() {
   normalizeAll();
 }
 function normalizeAll() {
+  state.type = 'normal';
   state.threads = clamp(Number(state.threads)||9, 3, 40);
   state.rows = clamp(Number(state.rows)||18, 4, 90);
   state.motifWidth = clamp(Number(state.motifWidth)||14, 4, 40);
@@ -741,7 +742,7 @@ function renderPattern() {
       drawNode(x,y,visual.fill,type,idx++);
     }
   }
-  svgText(svg,'Version 26 · Palette fusionnée à droite · Créé avec Calie',marginL,contentH-42,'footer-note');
+  svgText(svg,'Version 27 · Mise en page claire · Créé avec Calie',marginL,contentH-42,'footer-note');
 }
 function onKnotClick(idx) {
   const knots = buildKnotList();
@@ -904,7 +905,7 @@ function renderAll() {
 }
 function exportPreviewPng() {
   const link=document.createElement('a');
-  link.download='bracelet-studio-by-calie-v26.png';
+  link.download='bracelet-studio-by-calie-v27.png';
   link.href=previewCanvas.toDataURL('image/png');
   link.click();
 }

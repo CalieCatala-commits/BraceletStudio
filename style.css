@@ -427,3 +427,101 @@ label{display:block;margin:11px 0 7px;font-weight:700;font-size:14px}
 .sidepanel-right .thread-color-list{
   margin-top:8px;
 }
+
+/* V27 : jolie page, mode tissage important à droite, paramètres compacts */
+.app-grid{
+  grid-template-columns:290px minmax(420px,1fr) 310px;
+}
+.sidebar{
+  background:linear-gradient(180deg,#ffffff 0%,#fbfbff 100%);
+}
+.preview-left-block{
+  margin:-4px -4px 14px;
+  padding:12px;
+  border:1px solid #eceaf6;
+  border-radius:18px;
+  background:#ffffff;
+  box-shadow:0 8px 22px rgba(29,35,73,.06);
+}
+.preview-left-block .card-head{
+  margin-bottom:8px;
+}
+.preview-left-block h2{
+  margin-bottom:4px;
+}
+.preview-wrap-left{
+  background:linear-gradient(180deg,#ffffff,#f8faff);
+  border-radius:16px;
+  border:1px solid #edf0fa;
+}
+.compact-params{
+  padding:14px;
+  margin:0 -4px 14px;
+  border-radius:18px;
+  border:1px solid #eceaf6;
+  background:linear-gradient(135deg,#f8f7ff,#ffffff);
+}
+.compact-params h2{
+  margin-bottom:8px;
+}
+.compact-params label{
+  margin-top:8px;
+  font-size:13px;
+}
+.compact-params .stepper{
+  max-width:100%;
+  grid-template-columns:42px 1fr 42px;
+}
+.compact-params .stepper strong{
+  min-height:42px;
+  font-size:17px;
+}
+.compact-params .stepper button{
+  min-height:42px;
+  font-size:21px;
+}
+.compact-note{
+  margin-bottom:6px;
+}
+.sidepanel-right{
+  background:linear-gradient(180deg,#ffffff 0%,#fbfbff 100%);
+}
+.weave-box-featured{
+  padding:16px;
+  margin:-4px -4px 16px;
+  border-radius:20px;
+  border:1px solid #ddd8ff;
+  background:linear-gradient(180deg,#ffffff,#f8f6ff);
+  box-shadow:0 12px 32px rgba(93,73,216,.12);
+}
+.weave-box-featured h2{
+  color:#2c1c87;
+  font-size:16px;
+}
+.weave-box-featured .current-knot-card{
+  background:#ffffff;
+  border-color:#dfdcff;
+  box-shadow:0 8px 20px rgba(29,35,73,.06);
+}
+.weave-box-featured #currentKnotPreview{
+  max-width:170px;
+}
+.merged-palette-panel{
+  padding:16px;
+  margin:-4px -4px 0;
+  border-radius:20px;
+  border:1px solid #eceaf6;
+  background:#ffffff;
+}
+.legend-grid,
+.knot-icon-card{
+  display:none;
+}
+@media (max-width: 1180px){
+  .app-grid{grid-template-columns:270px minmax(0,1fr)}
+  .sidepanel-right{display:block;grid-column:1 / -1;max-height:none}
+}
+@media (max-width: 700px){
+  .app-grid{grid-template-columns:1fr}
+  .sidepanel-right{grid-column:auto}
+}
