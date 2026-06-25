@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#5f55d6" />
-  <title>Bracelet Studio by Calie — Version 10</title>
+  <title>Bracelet Studio by Calie — Version 12</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="style.css?v=10" />
+  <link rel="stylesheet" href="style.css?v=12" />
 </head>
 <body>
   <header class="topbar">
@@ -14,13 +14,14 @@
       <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
       <div>
         <h1>Bracelet Studio</h1>
-        <p>by Calie 💜</p>
+        <p>by Calie 💜 · V12 flèches modifiables</p>
       </div>
     </div>
     <div class="toolbar">
       <button id="newBtn">Nouveau</button>
       <button id="saveBtn">Enregistrer</button>
       <button id="exportBtn">Exporter PNG</button>
+      <button id="editKnotsToggle">Modifier les flèches</button>
       <button id="weaveToggle" class="primary">Mode tissage</button>
     </div>
   </header>
@@ -39,9 +40,10 @@
         <label>Nombre de fils</label>
         <div class="stepper">
           <button id="threadsMinus">−</button>
-          <strong id="threadsValue">12</strong>
+          <strong id="threadsValue">9</strong>
           <button id="threadsPlus">+</button>
         </div>
+        <p class="muted mini">Pair ou impair accepté.</p>
 
         <label>Nombre de rangées</label>
         <div class="stepper">
@@ -50,40 +52,54 @@
           <button id="rowsPlus">+</button>
         </div>
 
-        <label>Motif</label>
-        <select id="patternSelect">
-          <option value="diamonds">Diamants</option>
-          <option value="chevrons">Chevrons</option>
-          <option value="stripes">Rayures</option>
-          <option value="hearts">Cœurs</option>
-        </select>
+        <label>Largeur du motif</label>
+        <div class="stepper">
+          <button id="motifWidthMinus">−</button>
+          <strong id="motifWidthValue">14</strong>
+          <button id="motifWidthPlus">+</button>
+        </div>
 
+        <label>Hauteur du motif</label>
+        <div class="stepper">
+          <button id="motifHeightMinus">−</button>
+          <strong id="motifHeightValue">7</strong>
+          <button id="motifHeightPlus">+</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Couleurs</h2>
         <label>Nombre de couleurs</label>
         <div class="stepper">
           <button id="colorsMinus">−</button>
           <strong id="colorsValue">4</strong>
           <button id="colorsPlus">+</button>
         </div>
-        <p class="muted mini">Choisis de 2 à 12 couleurs.</p>
-      </section>
-
-      <section>
-        <h2>Couleurs des fils</h2>
         <div id="paletteList" class="palette-list"></div>
         <input id="colorPicker" type="color" hidden />
         <button id="addColorBtn" class="ghost full">+ Ajouter une couleur</button>
       </section>
 
       <section>
+        <h2>Motifs rapides</h2>
+        <div class="quick-grid">
+          <button id="diamondPreset">Diamants</button>
+          <button id="checkerPreset">Damier</button>
+          <button id="stripePreset">Rayures</button>
+          <button id="clearPreset">Effacer</button>
+        </div>
+      </section>
+
+      <section>
         <h2>Options</h2>
-        <label class="check"><input id="showRows" type="checkbox" checked /> Afficher les numéros de rangées</label>
+        <label class="check"><input id="showRows" type="checkbox" checked /> Afficher les numéros</label>
         <label class="check"><input id="showLetters" type="checkbox" checked /> Afficher les lettres</label>
         <label class="check"><input id="showPreviewGrid" type="checkbox" checked /> Aperçu détaillé</label>
       </section>
 
       <section class="aboutBox">
         <h2>À propos</h2>
-        <p><b>Bracelet Studio by Calie</b><br>Version 10 — aperçu type BraceletBook, plus grands diamants et rendu plus propre</p>
+        <p><b>Bracelet Studio by Calie</b><br>Version 12 — éditeur de motif tactile + flèches des nœuds modifiables directement.</p>
       </section>
     </aside>
 
@@ -91,10 +107,24 @@
       <section class="card">
         <div class="card-head">
           <h2>Aperçu du bracelet</h2>
-          <span id="summaryLabel">Normal · Diamants · 4 couleurs</span>
+          <span id="summaryLabel">Normal · 9 fils · 4 couleurs</span>
         </div>
         <div class="preview-wrap">
-          <canvas id="previewCanvas" width="1200" height="170"></canvas>
+          <canvas id="previewCanvas" width="1300" height="210"></canvas>
+        </div>
+      </section>
+
+      <section class="card editor-card">
+        <div class="card-head">
+          <h2>Éditeur de motif</h2>
+          <span>Touche une case pour changer sa couleur</span>
+        </div>
+        <div class="editor-help">
+          <button id="selectedColorBtn" class="selected-color">Couleur active</button>
+          <span>Appui court : appliquer la couleur active · Double appui : couleur suivante</span>
+        </div>
+        <div id="motifEditorScroller" class="motif-editor-scroller">
+          <svg id="motifSvg" xmlns="http://www.w3.org/2000/svg"></svg>
         </div>
       </section>
 
@@ -102,7 +132,7 @@
         <div class="card-head inline-head">
           <h2>Patron de nœuds</h2>
           <div class="inline-status">
-            <span id="modeBadge">Mode normal</span>
+            <span id="modeBadge">Mode tissage actif</span>
             <button id="zoomOutBtn" class="smallBtn">−</button>
             <button id="zoomResetBtn" class="smallBtn">100%</button>
             <button id="zoomInBtn" class="smallBtn">+</button>
@@ -116,7 +146,7 @@
 
     <aside class="card sidepanel-right">
       <section>
-        <h2>Légende des nœuds</h2>
+        <h2>Légende</h2>
         <div class="legend-grid">
           <div class="legend-item"><span class="knot-icon">↘</span><p>Nœud avant<br><small>gauche → droite</small></p></div>
           <div class="legend-item"><span class="knot-icon">↙</span><p>Nœud arrière<br><small>droite → gauche</small></p></div>
@@ -133,25 +163,25 @@
       <section class="weave-box">
         <div class="weave-head">
           <h2>Mode tissage</h2>
-          <span id="weaveStateBadge" class="state-pill">Inactif</span>
+          <span id="weaveStateBadge" class="state-pill active">Actif</span>
         </div>
         <div class="progressBlock">
-          <p id="weaveProgressText">Rangée 1 sur 18 · Nœud 1</p>
+          <p id="weaveProgressText">Rangée 1 · Nœud 1</p>
           <div class="progressBar"><span id="weaveProgressFill"></span></div>
         </div>
         <div class="current-knot-card">
           <svg id="currentKnotPreview" viewBox="0 0 160 140" aria-label="Aperçu du nœud actuel"></svg>
-          <p id="currentKnotText">Touchez le nœud suivant dans la grille.</p>
+          <p id="currentKnotText">Touchez le nœud suivant.</p>
         </div>
         <div class="weave-actions">
           <button id="prevKnotBtn">← Précédent</button>
           <button id="nextKnotBtn" class="primary">Suivant →</button>
         </div>
-        <button id="resetWeaveBtn" class="ghost full">Réinitialiser le tissage</button>
+        <button id="resetWeaveBtn" class="ghost full">Réinitialiser</button>
       </section>
     </aside>
   </main>
 
-  <script src="script.js?v=10"></script>
+  <script src="script.js?v=12"></script>
 </body>
 </html>

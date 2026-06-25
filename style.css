@@ -6,7 +6,6 @@
   --muted:#70788f;
   --brand:#5d49d8;
   --brand-dark:#2c1c87;
-  --soft:#f0ecff;
   --shadow:0 10px 35px rgba(29,35,73,.08);
   --radius:20px;
 }
@@ -32,14 +31,12 @@ button.primary{background:linear-gradient(135deg,#6957f0,#8c68ea);color:#fff;bor
 button.ghost{background:#faf9ff;color:#5a46d0;border-color:#d9d1ff}
 button.full{width:100%}
 .smallBtn{min-height:36px;padding:5px 10px;border-radius:12px}
-
-/* Correction iPad : entête compact et contenu qui ne déborde plus */
 .topbar{
   display:flex;
   justify-content:space-between;
   align-items:center;
   gap:14px;
-  padding:14px max(16px, env(safe-area-inset-left)) 14px max(16px, env(safe-area-inset-left));
+  padding:14px 16px;
   border-bottom:1px solid var(--line);
   background:rgba(255,255,255,.94);
   backdrop-filter:blur(14px);
@@ -57,11 +54,9 @@ button.full{width:100%}
 .brand-mark span:nth-child(3){background:#0ea5b9;transform:rotate(45deg) translateX(9px)}
 .toolbar{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end}
 .toolbar button{white-space:nowrap}
-
-/* iPad paysage : 3 colonnes si possible */
 .app-grid{
   display:grid;
-  grid-template-columns:280px minmax(390px,1fr) 280px;
+  grid-template-columns:280px minmax(420px,1fr) 280px;
   gap:14px;
   padding:14px;
   width:100%;
@@ -76,7 +71,7 @@ button.full{width:100%}
 }
 .sidebar,.sidepanel-right{padding:16px;overflow:auto;max-height:calc(100vh - 104px)}
 .sidebar section + section,.sidepanel-right section + section{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
-.center-column{display:grid;grid-template-rows:auto 1fr;gap:14px;min-width:0}
+.center-column{display:grid;grid-template-rows:auto auto 1fr;gap:14px;min-width:0}
 .center-column .card{padding:16px}
 h2{margin:0 0 12px;font-size:15px;letter-spacing:.03em;color:#4933b7;text-transform:uppercase}
 label{display:block;margin:11px 0 7px;font-weight:700;font-size:14px}
@@ -88,38 +83,52 @@ label{display:block;margin:11px 0 7px;font-weight:700;font-size:14px}
 .stepper button{border:none;border-right:1px solid #e5e8f5;border-radius:0;font-size:24px;padding:0}
 .stepper button:last-child{border-right:none;border-left:1px solid #e5e8f5}
 .stepper strong{display:grid;place-items:center;min-height:48px;font-size:19px}
-select{width:100%}
-.palette-list{display:grid;gap:9px}
+.palette-list{display:grid;gap:9px;margin-top:12px}
 .palette-row{display:grid;grid-template-columns:28px 40px 1fr 34px;align-items:center;gap:8px}
 .palette-row .index-badge{font-weight:800;color:#53607d;text-align:center}
 .palette-swatch{width:40px;height:40px;border-radius:13px;border:2px solid rgba(0,0,0,.08);box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.palette-swatch.active{outline:4px solid rgba(105,87,240,.24);border-color:#4933b7}
 .palette-row code{display:block;background:#f8f8fc;border:1px solid #eceaf6;border-radius:11px;padding:9px 10px;font-size:12px;overflow:hidden;text-overflow:ellipsis}
 .icon-btn{width:34px;height:34px;min-height:34px;border-radius:11px;padding:0;font-size:18px}
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .check{display:flex;align-items:center;gap:9px;font-weight:600;color:#27314d;font-size:14px}
 .check input{width:18px;height:18px}
 .aboutBox p{margin:0;line-height:1.45;font-size:13px}
-
 .card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap}
 .card-head span{color:var(--muted);font-weight:600;font-size:13px}
-.preview-wrap{border:1px solid #ebeaf6;background:#fcfcff;border-radius:18px;padding:10px;overflow:hidden}
-#previewCanvas{display:block;width:100%;height:190px;border-radius:16px;background:#fff}
+.preview-wrap{padding:16px;background:linear-gradient(180deg,#ffffff,#fbfbff);border:1px solid #ebeaf6;border-radius:18px;overflow:hidden}
+#previewCanvas{display:block;width:100%;height:210px;border-radius:16px;background:#fff;box-shadow:inset 0 0 0 1px rgba(93,73,216,.08)}
+.editor-help{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;color:var(--muted);font-size:13px;font-weight:700}
+.selected-color{color:#fff;border-color:transparent}
+.motif-editor-scroller{
+  overflow:auto;
+  border:1px solid #eceaf6;
+  border-radius:18px;
+  background:#fff;
+  min-height:210px;
+  max-height:330px;
+  -webkit-overflow-scrolling:touch;
+}
+#motifSvg{display:block}
+.motifCell{cursor:pointer;filter:drop-shadow(0 1px 1px rgba(0,0,0,.08))}
+.motifCell.active{stroke:#111827 !important;stroke-width:3 !important}
 .inline-status{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-#modeBadge{display:inline-flex;align-items:center;padding:7px 11px;border-radius:999px;background:#eef2ff;color:#4954cf;font-weight:800;font-size:13px}
+#modeBadge{display:inline-flex;align-items:center;padding:7px 11px;border-radius:999px;background:#e8fff0;color:#18803d;font-weight:800;font-size:13px}
+#editKnotsToggle.active{background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;border-color:transparent}
+.node.editing circle{stroke:#ef4444 !important;stroke-width:4 !important;filter:drop-shadow(0 0 7px rgba(239,68,68,.35))}
+.editHint{display:inline-flex;align-items:center;padding:7px 11px;border-radius:999px;background:#fff7ed;color:#c2410c;font-weight:900;font-size:13px}
 .main-pattern-card{display:grid;grid-template-rows:auto 1fr;min-height:0}
 .pattern-scroller{
   border:1px solid #eceaf6;
   border-radius:18px;
   overflow:auto;
-  min-height:560px;
-  max-height:calc(100vh - 244px);
-  background:
-    linear-gradient(#fff,#fff),
-    repeating-linear-gradient(0deg,transparent 0 63px,#f4f3fb 64px),
-    repeating-linear-gradient(90deg,transparent 0 63px,#f7f6fd 64px);
+  min-height:440px;
+  max-height:calc(100vh - 505px);
+  background:linear-gradient(#fff,#fff),radial-gradient(circle at 1px 1px, rgba(93,73,216,.05) 1px, transparent 0);
+  background-size:auto, 22px 22px;
   -webkit-overflow-scrolling:touch;
 }
 #patternSvg{display:block;transform-origin:0 0}
-
 .legend-grid{display:grid;gap:10px}
 .legend-item{display:grid;grid-template-columns:50px 1fr;gap:10px;align-items:center}
 .knot-icon{display:grid;place-items:center;width:50px;height:50px;border-radius:50%;border:1.7px solid #2b334d;background:#fff;font-size:20px;font-weight:900}
@@ -136,27 +145,26 @@ select{width:100%}
 #currentKnotPreview{width:100%;max-width:145px;height:auto;display:block;margin:0 auto 8px}
 #currentKnotText{margin:0;color:#39425b;font-weight:700;font-size:13px}
 .weave-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-
 .axisText{font-size:17px;font-weight:900;fill:#20273a;text-anchor:middle}
 .rowText{font-size:15px;font-weight:700;fill:#67728a;text-anchor:end}
 .threadLine{stroke-linecap:round;stroke-linejoin:round;opacity:.98;filter:drop-shadow(0 1px 1px rgba(0,0,0,.15))}
-.threadGhost{opacity:.22}
+.threadGhost{opacity:.23}
+.threadColumnGuide{stroke:#ecedf5;stroke-width:2}
+.threadStart{stroke-linecap:round;filter:drop-shadow(0 1px 1px rgba(0,0,0,.16))}
 .node circle{stroke:#1f2a44;stroke-width:1.6}
 .node.done circle{fill:#4dd27b !important;stroke:#198746;stroke-width:2.2}
 .node.next circle{stroke:#f59e0b !important;stroke-width:4.5 !important;filter:drop-shadow(0 0 8px rgba(245,158,11,.55))}
+.node.unpaired circle{fill:#f8fafc !important;stroke:#cbd5e1;stroke-dasharray:4 4}
 .knotText{font-size:24px;font-weight:900;text-anchor:middle;dominant-baseline:middle;pointer-events:none;fill:#121622}
 .knotText.light{fill:#fff}
+.unpairedText{font-size:12px;font-weight:900;fill:#64748b;text-anchor:middle;dominant-baseline:middle}
 .footer-note{font-size:13px;fill:#7a8399}
-
-/* iPad portrait / petites tablettes : 2 colonnes, pas d'empilement trop tôt */
 @media (max-width: 1180px){
-  .app-grid{grid-template-columns:270px minmax(0,1fr)}
+  .app-grid{grid-template-columns:260px minmax(0,1fr)}
   .sidepanel-right{display:none}
   .sidebar{max-height:none}
-  .pattern-scroller{max-height:calc(100vh - 230px)}
+  .pattern-scroller{max-height:none;min-height:420px}
 }
-
-/* iPhone / écran très étroit : centre d'abord, réglages ensuite */
 @media (max-width: 700px){
   .topbar{align-items:flex-start;flex-direction:column}
   .brand h1{font-size:21px}
@@ -165,64 +173,6 @@ select{width:100%}
   .center-column{order:1}
   .sidebar{order:2}
   .sidepanel-right{display:block;order:3;max-height:none}
-  .pattern-scroller{min-height:65vh;max-height:75vh}
+  .pattern-scroller{min-height:60vh;max-height:75vh}
   .stepper{max-width:none}
 }
-
-
-/* Version 7 : patron plus proche d'un vrai bracelet */
-.pattern-scroller{
-  background:
-    linear-gradient(#fff,#fff),
-    radial-gradient(circle at 1px 1px, rgba(93,73,216,.05) 1px, transparent 0);
-  background-size:auto, 22px 22px;
-}
-.threadStart{
-  stroke-linecap:round;
-  filter:drop-shadow(0 1px 1px rgba(0,0,0,.16));
-}
-.threadColumnGuide{
-  stroke:#ecedf5;
-  stroke-width:2;
-}
-.node.unpaired circle{
-  fill:#f8fafc !important;
-  stroke:#cbd5e1;
-  stroke-dasharray:4 4;
-}
-.unpairedText{
-  font-size:12px;
-  font-weight:900;
-  fill:#64748b;
-  text-anchor:middle;
-  dominant-baseline:middle;
-}
-#summaryLabel b{
-  color:#4933b7;
-}
-.knotText{
-  font-size:26px;
-}
-.preview-wrap{
-  background:linear-gradient(180deg,#ffffff,#fbfcff);
-}
-@media (max-width: 1180px){
-  .app-grid{grid-template-columns:260px minmax(0,1fr)}
-}
-
-
-/* V8 : aperçu bracelet amélioré */
-#previewCanvas{display:block;width:100%;height:190px;border-radius:16px;background:#fff}
-.preview-wrap{padding:14px;background:linear-gradient(180deg,#ffffff,#fbfbfe);}
-
-
-/* V9 : aperçu plus grand, plus lisible, moins mosaïque */
-.preview-wrap{
-  padding:16px;
-  background:linear-gradient(180deg,#ffffff,#fbfbff);
-}
-#previewCanvas{display:block;width:100%;height:190px;border-radius:16px;background:#fff}
-
-/* V10 : aperçu beaucoup plus lisible */
-.preview-wrap{padding:16px;background:linear-gradient(180deg,#ffffff,#fbfbff)}
-#previewCanvas{height:190px !important;box-shadow:inset 0 0 0 1px rgba(93,73,216,.08)}
