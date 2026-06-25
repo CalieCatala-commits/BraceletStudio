@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#5f55d6" />
-  <title>Bracelet Studio by Calie — Version 30</title>
+  <title>Bracelet Studio by Calie — Version 31</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="style.css?v=30" />
+  <link rel="stylesheet" href="style.css?v=31" />
 </head>
 <body>
   <header class="topbar">
@@ -14,7 +14,7 @@
       <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
       <div>
         <h1>Bracelet Studio</h1>
-        <p>by Calie 💜 · V30 paramètres simplifiés</p>
+        <p>by Calie 💜 · V31 iPad clair</p>
       </div>
     </div>
     <div class="toolbar">
@@ -28,7 +28,7 @@
 
   <main class="app-grid">
     <aside class="card sidebar">
-      <section class="preview-left-block">
+<section class="preview-left-block">
         <div class="card-head">
           <h2>Aperçu du bracelet</h2>
           <span id="summaryLabel">Normal · 9 fils · motif 14×7 · 4 couleurs</span>
@@ -38,7 +38,30 @@
         </div>
       </section>
 
-      <section class="compact-params">
+<section class="weave-box weave-box-featured weave-under-preview">
+        <div class="weave-head">
+          <h2>Mode tissage</h2>
+          <span id="weaveStateBadge" class="state-pill active">Actif</span>
+        </div>
+        <div class="progressBlock">
+          <p id="weaveProgressText">Rangée 1 · Nœud 1</p>
+          <div class="progressBar"><span id="weaveProgressFill"></span></div>
+        </div>
+        <div class="current-knot-card">
+          <svg id="currentKnotPreview" viewBox="0 0 160 140" aria-label="Aperçu du nœud actuel"></svg>
+          <p id="currentKnotText">Touchez le nœud suivant.</p>
+        </div>
+        <div class="weave-actions">
+          <button id="prevKnotBtn">← Précédent</button>
+          <button id="nextKnotBtn" class="primary">Suivant →</button>
+        </div>
+        <button id="resetWeaveBtn" class="ghost full">Réinitialiser</button>
+      </section>
+
+      <details class="settings-dropdown" open>
+        <summary>Paramètres</summary>
+        <div class="settings-dropdown-body">
+<section class="compact-params">
         <h2>Paramètres</h2>
 <label>Nombre de fils</label>
         <div class="stepper">
@@ -55,23 +78,24 @@
           <button id="rowsPlus">+</button>
         </div>
       </section>
-
-      <section>
-        <h2>Motifs rapides</h2>
-        <div class="quick-grid">
-          <button id="diamondPreset">Diamants</button>
-          <button id="checkerPreset">Damier</button>
-          <button id="stripePreset">Rayures</button>
-          <button id="clearPreset">Effacer</button>
+<section class="merged-palette-panel">
+        <h2>Couleurs & fils</h2>
+        <label>Nombre de couleurs</label>
+        <div class="stepper">
+          <button id="colorsMinus">−</button>
+          <strong id="colorsValue">4</strong>
+          <button id="colorsPlus">+</button>
         </div>
-      </section>
+        <div id="paletteList" class="palette-list"></div>
+        <input id="colorPicker" type="color" hidden />
+        <button id="addColorBtn" class="ghost full">+ Ajouter une couleur</button>
 
-      <section>
-        <h2>Options</h2>
-        <label class="check"><input id="showRows" type="checkbox" checked /> Afficher les numéros</label>
-        <label class="check"><input id="showLetters" type="checkbox" checked /> Afficher les lettres</label>
-        <label class="check"><input id="showPreviewGrid" type="checkbox" checked /> Aperçu détaillé</label>
+        <p class="muted mini merged-palette-note">Choisis ensuite la couleur de départ de chaque fil : A, B, C…</p>
+        <div id="threadColorList" class="thread-color-list"></div>
+        <button id="resetThreadColorsBtn" class="ghost full">Réinitialiser les fils</button>
       </section>
+        </div>
+      </details>
     </aside>
 
     <section class="center-column">
@@ -102,46 +126,9 @@
     </section>
 
     
-    <aside class="card sidepanel-right">
-      <section class="weave-box weave-box-featured">
-        <div class="weave-head">
-          <h2>Mode tissage</h2>
-          <span id="weaveStateBadge" class="state-pill active">Actif</span>
-        </div>
-        <div class="progressBlock">
-          <p id="weaveProgressText">Rangée 1 · Nœud 1</p>
-          <div class="progressBar"><span id="weaveProgressFill"></span></div>
-        </div>
-        <div class="current-knot-card">
-          <svg id="currentKnotPreview" viewBox="0 0 160 140" aria-label="Aperçu du nœud actuel"></svg>
-          <p id="currentKnotText">Touchez le nœud suivant.</p>
-        </div>
-        <div class="weave-actions">
-          <button id="prevKnotBtn">← Précédent</button>
-          <button id="nextKnotBtn" class="primary">Suivant →</button>
-        </div>
-        <button id="resetWeaveBtn" class="ghost full">Réinitialiser</button>
-      </section>
 
-      <section class="merged-palette-panel">
-        <h2>Couleurs & fils</h2>
-        <label>Nombre de couleurs</label>
-        <div class="stepper">
-          <button id="colorsMinus">−</button>
-          <strong id="colorsValue">4</strong>
-          <button id="colorsPlus">+</button>
-        </div>
-        <div id="paletteList" class="palette-list"></div>
-        <input id="colorPicker" type="color" hidden />
-        <button id="addColorBtn" class="ghost full">+ Ajouter une couleur</button>
-
-        <p class="muted mini merged-palette-note">Choisis ensuite la couleur de départ de chaque fil : A, B, C…</p>
-        <div id="threadColorList" class="thread-color-list"></div>
-        <button id="resetThreadColorsBtn" class="ghost full">Réinitialiser les fils</button>
-      </section>
-    </aside>
   </main>
 
-  <script src="script.js?v=30"></script>
+  <script src="script.js?v=31"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'braceletStudioByCalieV30';
+const STORAGE_KEY = 'braceletStudioByCalieV31';
 const DEFAULT_COLORS = ['#A8D8F0','#3D5CB3','#EF0B0B','#90EAAE','#FFFFFF','#26408B','#F6C9D9','#7FC8B7','#111827','#F4E8B2','#7A4CBC','#13A4C8'];
 
 const state = {
@@ -795,7 +795,7 @@ function renderPattern() {
       drawNode(x,y,visual.fill,type,idx++);
     }
   }
-  svgText(svg,'Version 30 · Paramètres simplifiés · Créé avec Calie',marginL,contentH-42,'footer-note');
+  svgText(svg,'Version 31 · iPad clair · Créé avec Calie',marginL,contentH-42,'footer-note');
 }
 function onKnotClick(idx) {
   const knots = buildKnotList();
@@ -960,7 +960,7 @@ function renderAll() {
 }
 function exportPreviewPng() {
   const link=document.createElement('a');
-  link.download='bracelet-studio-by-calie-v30.png';
+  link.download='bracelet-studio-by-calie-v31.png';
   link.href=previewCanvas.toDataURL('image/png');
   link.click();
 }
@@ -981,10 +981,14 @@ function bindUI() {
   $('#colorsMinus').onclick=()=>{state.colorCount=clamp(state.colorCount-1,2,12);normalizeAll();resetWeave();renderAll();};
   $('#colorsPlus').onclick=()=>{state.colorCount=clamp(state.colorCount+1,2,12);normalizeAll();resetWeave();renderAll();};
   $('#addColorBtn').onclick=()=>{state.colorCount=clamp(state.colorCount+1,2,12);normalizeAll();renderAll();};
-  $('#diamondPreset').onclick=()=>setPreset('diamond');
-  $('#checkerPreset').onclick=()=>setPreset('checker');
-  $('#stripePreset').onclick=()=>setPreset('stripe');
-  $('#clearPreset').onclick=()=>setPreset('clear');
+  const diamondPreset=$('#diamondPreset');
+  const checkerPreset=$('#checkerPreset');
+  const stripePreset=$('#stripePreset');
+  const clearPreset=$('#clearPreset');
+  if (diamondPreset) diamondPreset.onclick=()=>setPreset('diamond');
+  if (checkerPreset) checkerPreset.onclick=()=>setPreset('checker');
+  if (stripePreset) stripePreset.onclick=()=>setPreset('stripe');
+  if (clearPreset) clearPreset.onclick=()=>setPreset('clear');
   const resetThreadColorsBtn=$('#resetThreadColorsBtn');
   if (resetThreadColorsBtn) resetThreadColorsBtn.onclick=()=>{
     state.threadColors = [];
