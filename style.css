@@ -177,7 +177,7 @@ label{display:block;margin:11px 0 7px;font-weight:700;font-size:14px}
   .stepper{max-width:none}
 }
 
-/* V13 : le patron devient l’éditeur principal */
+/* V14 : patron interactif principal */
 #editColorsToggle.active{
   background:linear-gradient(135deg,#22c55e,#14b8a6);
   color:#fff;
@@ -200,4 +200,77 @@ label{display:block;margin:11px 0 7px;font-weight:700;font-size:14px}
   color:#9aa1b5;
   font-size:12px;
   font-weight:800;
+}
+
+/* V14 : structure façon générateur interactif */
+.center-column{
+  grid-template-rows:auto auto 1fr;
+}
+.editor-card{
+  opacity:1;
+}
+.motif-editor-scroller{
+  display:none;
+}
+.editor-help{
+  padding:12px;
+  border:1px dashed #d8d6ec;
+  border-radius:16px;
+  background:#fbfbff;
+}
+.main-pattern-card{
+  position:relative;
+}
+.pattern-editor-shell{
+  position:relative;
+  padding:42px 48px 48px;
+  border:1px solid #eceaf6;
+  border-radius:20px;
+  background:#fff;
+}
+.pattern-editor-shell .pattern-scroller{
+  border-radius:16px;
+  min-height:460px;
+  max-height:calc(100vh - 455px);
+}
+.edgeBtn{
+  position:absolute;
+  z-index:3;
+  width:34px;
+  height:34px;
+  min-height:34px;
+  border-radius:9px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  background:#ff6347;
+  border-color:#ff6347;
+  color:#fff;
+  font-size:20px;
+  font-weight:900;
+  box-shadow:0 5px 16px rgba(255,99,71,.25);
+}
+.topMinus{top:10px;left:calc(50% - 38px)}
+.topPlus{top:10px;left:calc(50% + 4px)}
+.bottomMinus{bottom:10px;left:calc(50% - 38px)}
+.bottomPlus{bottom:10px;left:calc(50% + 4px)}
+.leftMinus{left:10px;top:40%}
+.leftPlus{left:10px;top:calc(40% + 42px)}
+.rightMinus{right:10px;top:40%}
+.rightPlus{right:10px;top:calc(40% + 42px)}
+.node circle{
+  transition:stroke-width .15s ease, filter .15s ease;
+}
+.node:hover circle{
+  stroke-width:4;
+}
+#previewCanvas{
+  height:150px !important;
+}
+.preview-wrap{
+  padding:12px 14px;
+}
+@media (max-width: 700px){
+  .pattern-editor-shell{padding:42px 42px 48px}
+  .edgeBtn{width:32px;height:32px;min-height:32px}
 }

@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'braceletStudioByCalieV13';
+const STORAGE_KEY = 'braceletStudioByCalieV14';
 const DEFAULT_COLORS = ['#A8D8F0','#3D5CB3','#EF0B0B','#90EAAE','#FFFFFF','#26408B','#F6C9D9','#7FC8B7','#111827','#F4E8B2','#7A4CBC','#13A4C8'];
 
 const state = {
@@ -210,11 +210,11 @@ function fillDiamond(ctx,cx,cy,w,h,fill,stroke='rgba(22,31,55,.32)') {
   ctx.restore();
 }
 function renderPreview() {
-  const {width,height,ctx}=setCanvasSize(previewCanvas,210);
+  const {width,height,ctx}=setCanvasSize(previewCanvas,150);
   ctx.clearRect(0,0,width,height);
   ctx.fillStyle='#fff'; roundRect(ctx,0,0,width,height,20); ctx.fill();
 
-  const padX=30, padY=26;
+  const padX=22, padY=20;
   const bandX=padX, bandY=padY, bandW=width-padX*2, bandH=height-padY*2;
   ctx.save();
   ctx.shadowColor='rgba(15,23,42,.12)'; ctx.shadowBlur=18; ctx.shadowOffsetY=5;
@@ -364,7 +364,7 @@ function renderPattern() {
       drawNode(x,y,knotFill(left,r),type,idx++);
     }
   }
-  svgText(svg,'Version 13 · Patron éditeur · Créé avec Calie',marginL,contentH-42,'footer-note');
+  svgText(svg,'Version 14 · Patron interactif · Créé avec Calie',marginL,contentH-42,'footer-note');
 }
 function onKnotClick(idx) {
   const knots = buildKnotList();
@@ -478,7 +478,7 @@ function renderAll() {
 }
 function exportPreviewPng() {
   const link=document.createElement('a');
-  link.download='bracelet-studio-by-calie-v13.png';
+  link.download='bracelet-studio-by-calie-v14.png';
   link.href=previewCanvas.toDataURL('image/png');
   link.click();
 }
@@ -511,6 +511,16 @@ function bindUI() {
   $('#prevKnotBtn').onclick=()=>{if(state.next<=0)return;state.next=clamp(state.next-1,0,totalKnots()-1);state.done.delete(state.next);renderAll();};
   $('#nextKnotBtn').onclick=()=>{if(state.next>=totalKnots())return;state.done.add(state.next);state.next=clamp(state.next+1,0,totalKnots());renderAll();};
   $('#resetWeaveBtn').onclick=()=>{resetWeave();renderAll();};
+  const changeThreads = (delta)=>{state.threads=clamp(state.threads+delta,3,40);resetWeave();renderAll();};
+  const changeRows = (delta)=>{state.rows=clamp(state.rows+delta,4,90);resetWeave();renderAll();};
+  $('#addThreadLeft').onclick=()=>changeThreads(1);
+  $('#addThreadRight').onclick=()=>changeThreads(1);
+  $('#removeThreadLeft').onclick=()=>changeThreads(-1);
+  $('#removeThreadRight').onclick=()=>changeThreads(-1);
+  $('#addRowTop').onclick=()=>changeRows(1);
+  $('#addRowBottom').onclick=()=>changeRows(1);
+  $('#removeRowTop').onclick=()=>changeRows(-1);
+  $('#removeRowBottom').onclick=()=>changeRows(-1);
   $('#zoomInBtn').onclick=()=>{state.zoom=clamp(state.zoom+.1,.7,2);renderAll();};
   $('#zoomOutBtn').onclick=()=>{state.zoom=clamp(state.zoom-.1,.7,2);renderAll();};
   $('#zoomResetBtn').onclick=()=>{state.zoom=1;renderAll();};

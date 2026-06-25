@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#5f55d6" />
-  <title>Bracelet Studio by Calie — Version 13</title>
+  <title>Bracelet Studio by Calie — Version 14</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="style.css?v=13" />
+  <link rel="stylesheet" href="style.css?v=14" />
 </head>
 <body>
   <header class="topbar">
@@ -14,7 +14,7 @@
       <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
       <div>
         <h1>Bracelet Studio</h1>
-        <p>by Calie 💜 · V13 patron éditeur</p>
+        <p>by Calie 💜 · V14 patron interactif</p>
       </div>
     </div>
     <div class="toolbar">
@@ -100,7 +100,7 @@
 
       <section class="aboutBox">
         <h2>À propos</h2>
-        <p><b>Bracelet Studio by Calie</b><br>Version 13 — le patron de nœuds devient aussi l’éditeur de motif.</p>
+        <p><b>Bracelet Studio by Calie</b><br>Version 14 — patron interactif inspiré du fonctionnement BraceletBook.</p>
       </section>
     </aside>
 
@@ -117,8 +117,8 @@
 
       <section class="card editor-card">
         <div class="card-head">
-          <h2>Ancien éditeur de motif</h2>
-          <span>Optionnel : le vrai éditeur est maintenant le patron de nœuds</span>
+          <h2>Outils du patron interactif</h2>
+          <span>Le patron est l’éditeur principal</span>
         </div>
         <div class="editor-help">
           <button id="selectedColorBtn" class="selected-color">Couleur active</button>
@@ -131,16 +131,26 @@
 
       <section class="card main-pattern-card">
         <div class="card-head inline-head">
-          <h2>Patron de nœuds / éditeur principal</h2>
+          <h2>Patron interactif</h2>
           <div class="inline-status">
-            <span id="modeBadge">Mode tissage actif</span>
+            <span id="modeBadge">Mode interactif</span>
             <button id="zoomOutBtn" class="smallBtn">−</button>
             <button id="zoomResetBtn" class="smallBtn">100%</button>
             <button id="zoomInBtn" class="smallBtn">+</button>
           </div>
         </div>
-        <div id="patternScroller" class="pattern-scroller">
-          <svg id="patternSvg" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="pattern-editor-shell">
+          <button id="addRowTop" class="edgeBtn topPlus">+</button>
+          <button id="removeRowTop" class="edgeBtn topMinus">−</button>
+          <button id="removeThreadLeft" class="edgeBtn leftMinus">−</button>
+          <button id="addThreadLeft" class="edgeBtn leftPlus">+</button>
+          <button id="removeThreadRight" class="edgeBtn rightMinus">−</button>
+          <button id="addThreadRight" class="edgeBtn rightPlus">+</button>
+          <div id="patternScroller" class="pattern-scroller">
+            <svg id="patternSvg" xmlns="http://www.w3.org/2000/svg"></svg>
+          </div>
+          <button id="removeRowBottom" class="edgeBtn bottomMinus">−</button>
+          <button id="addRowBottom" class="edgeBtn bottomPlus">+</button>
         </div>
       </section>
     </section>
@@ -183,6 +193,6 @@
     </aside>
   </main>
 
-  <script src="script.js?v=13"></script>
+  <script src="script.js?v=14"></script>
 </body>
 </html>
