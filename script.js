@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'braceletStudioByCalieV7';
+const STORAGE_KEY = 'braceletStudioByCalieV8';
 const DEFAULT_COLORS = ['#A8D8F0','#3D5CB3','#EF0B0B','#90EAAE','#FFFFFF','#26408B','#F6C9D9','#7FC8B7','#111827','#F4E8B2','#7A4CBC','#13A4C8'];
 
 const state = {
@@ -179,7 +179,8 @@ function setCanvasSize(canvas, cssHeight) {
   ctx.setTransform(dpr,0,0,dpr,0,0);
   return { width, height: cssHeight, ctx };
 }
-function drawDiamondTile(ctx, x, y, w, h, fill, stroke='rgba(43,51,77,.42)') {
+function drawPreviewDiamond(ctx, x, y, w, h, fill, stroke='rgba(43,51,77,.28)') {
+  ctx.save();
   ctx.beginPath();
   ctx.moveTo(x, y - h/2);
   ctx.lineTo(x + w/2, y);
@@ -189,39 +190,113 @@ function drawDiamondTile(ctx, x, y, w, h, fill, stroke='rgba(43,51,77,.42)') {
   ctx.fillStyle = fill;
   ctx.fill();
   ctx.strokeStyle = stroke;
-  ctx.lineWidth = 1.15;
+  ctx.lineWidth = 1;
   ctx.stroke();
+  // soft woven highlight
+  ctx.beginPath();
+  ctx.moveTo(x - w*0.22, y - h*0.18);
+  ctx.lineTo(x + w*0.02, y - h*0.42);
+  ctx.strokeStyle = 'rgba(255,255,255,.45)';
+  ctx.lineWidth = 1.4;
+  ctx.stroke();
+  // subtle shadow on lower-right edge
+  ctx.beginPath();
+  ctx.moveTo(x + w*0.05, y + h*0.40);
+  ctx.lineTo(x + w*0.24, y + h*0.18);
+  ctx.strokeStyle = 'rgba(0,0,0,.10)';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+  ctx.restore();
+}
+function drawBandShape(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
 }
 function renderPreview() {
-  const { width, height, ctx } = setCanvasSize(previewCanvas, 130);
+  const { width, height, ctx } = setCanvasSize(previewCanvas, 150);
   ctx.clearRect(0,0,width,height);
-  ctx.fillStyle = '#fff';
-  roundRect(ctx, 0, 0, width, height, 16); ctx.fill();
 
-  const tileW = 22;
-  const tileH = 28;
-  const rows = 7;
-  const cols = Math.ceil(width / (tileW*.95)) + 2;
-  const startX = 15;
-  const startY = height/2 - (rows-1) * tileH*.39;
+  // outer card
+  ctx.fillStyle = '#fdfdff';
+  roundRect(ctx, 0, 0, width, height, 18);
+  ctx.fill();
 
-  if (state.showPreviewGrid) {
-    for (let c=0; c<cols; c++) {
-      for (let r=0; r<rows; r++) {
-        const x = startX + c * tileW*.95;
-        const y = startY + r * tileH*.78 + (c % 2 ? tileH*.39 : 0);
-        const threadLikeCol = (c % Math.max(4,state.threads));
-        const color = state.colors[motifColorIndex(threadLikeCol, r) % state.colors.length];
-        drawDiamondTile(ctx, x, y, tileW, tileH, color);
+  // bracelet band area
+  const pad = 14;
+  const bandX = pad;
+  const bandY = 16;
+  const bandW = width - pad*2;
+  const bandH = height - 32;
+  drawBandShape(ctx, bandX, bandY, bandW, bandH, 18);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  ctx.strokeStyle = '#e6e8f4';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  // little braided ends to feel more bracelet-like
+  const endW = 10;
+  ctx.save();
+  drawBandShape(ctx, bandX, bandY, bandW, bandH, 18);
+  ctx.clip();
+  for (let i=0;i<3;i++) {
+    const yy = bandY + 18 + i*18;
+    ctx.strokeStyle = i%2 ? '#d7dff2' : '#edf1fa';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(bandX + 2, yy);
+    ctx.lineTo(bandX + 16, yy + 12);
+    ctx.moveTo(bandX + 2, yy + 12);
+    ctx.lineTo(bandX + 16, yy);
+    ctx.moveTo(bandX + bandW - 16, yy);
+    ctx.lineTo(bandX + bandW - 2, yy + 12);
+    ctx.moveTo(bandX + bandW - 16, yy + 12);
+    ctx.lineTo(bandX + bandW - 2, yy);
+    ctx.stroke();
+  }
+
+  // preview motif: larger, cleaner diamonds closer to a real bracelet visual
+  const rows = state.pattern === 'chevrons' ? 6 : 5;
+  const tileH = Math.min(26, (bandH - 16) / rows);
+  const tileW = tileH * 0.92;
+  const xStep = tileW * 0.94;
+  const yStep = tileH * 0.80;
+  const startX = bandX + 18;
+  const startY = bandY + (bandH - ((rows-1)*yStep + tileH)) / 2 + tileH/2;
+  const cols = Math.ceil((bandW - 36) / xStep) + 1;
+
+  for (let c=0; c<cols; c++) {
+    for (let r=0; r<rows; r++) {
+      const x = startX + c * xStep;
+      const y = startY + r * yStep + (c % 2 ? tileH*0.38 : 0);
+      const refCol = (c % Math.max(state.threads, 4));
+      let color = state.colors[motifColorIndex(refCol, r) % state.colors.length];
+      if (state.pattern === 'diamonds' && state.colorCount >= 4) {
+        // make the central white/light areas cleaner and more intentional
+        const d = nearestDiamondCenter(refCol, r).d;
+        if (d <= 2.2) color = state.colors[Math.min(4, state.colors.length-1)];
       }
-    }
-  } else {
-    for (let c=0; c<cols; c++) {
-      const x = startX + c * tileW*.95;
-      const color = state.colors[c % state.colors.length];
-      drawDiamondTile(ctx, x, height/2, tileW, tileH*4, color, 'rgba(43,51,77,.18)');
+      drawPreviewDiamond(ctx, x, y, tileW, tileH, color);
     }
   }
+
+  // soft horizontal yarn texture
+  for (let i=0;i<6;i++) {
+    const y = bandY + 10 + i * (bandH-20)/5;
+    ctx.strokeStyle = 'rgba(255,255,255,.16)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(bandX + 14, y);
+    ctx.lineTo(bandX + bandW - 14, y);
+    ctx.stroke();
+  }
+
+  ctx.restore();
 }
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
@@ -333,7 +408,7 @@ function renderPattern() {
   }
 
   const note = document.createElementNS('http://www.w3.org/2000/svg','text');
-  note.textContent = 'Version 7 · Nombre de fils pair ou impair · Créé avec Calie';
+  note.textContent = 'Version 8 · Aperçu du bracelet amélioré · Créé avec Calie';
   note.setAttribute('x', marginL);
   note.setAttribute('y', contentH - 42);
   note.setAttribute('class','footer-note');
@@ -427,7 +502,7 @@ function resetProject() {
 }
 function exportPreviewPng() {
   const link = document.createElement('a');
-  link.download = 'bracelet-studio-by-calie-v7.png';
+  link.download = 'bracelet-studio-by-calie-v8.png';
   link.href = previewCanvas.toDataURL('image/png');
   link.click();
 }
