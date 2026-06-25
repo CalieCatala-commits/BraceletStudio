@@ -1,10 +1,10 @@
-const STORAGE_KEY = 'braceletStudioByCalieV6';
-const DEFAULT_COLORS = ['#A8D8F0','#3D5CB3','#FFFFFF','#8FCBEA','#C7D1E3','#26408B','#F6C9D9','#7FC8B7','#111827','#F4E8B2','#7A4CBC','#13A4C8'];
+const STORAGE_KEY = 'braceletStudioByCalieV7';
+const DEFAULT_COLORS = ['#A8D8F0','#3D5CB3','#EF0B0B','#90EAAE','#FFFFFF','#26408B','#F6C9D9','#7FC8B7','#111827','#F4E8B2','#7A4CBC','#13A4C8'];
 
 const state = {
   type: 'normal',
   pattern: 'diamonds',
-  threads: 12,
+  threads: 9,
   rows: 18,
   colorCount: 4,
   colors: DEFAULT_COLORS.slice(0,4),
@@ -21,7 +21,6 @@ const $ = (s) => document.querySelector(s);
 const svg = $('#patternSvg');
 const scroller = $('#patternScroller');
 const previewCanvas = $('#previewCanvas');
-const previewCtx = previewCanvas.getContext('2d');
 const currentKnotPreview = $('#currentKnotPreview');
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
@@ -36,16 +35,17 @@ function loadState() {
     Object.assign(state, raw);
     state.done = new Set(raw.done || []);
     normalizeColors();
+    state.threads = clamp(Number(state.threads) || 9, 3, 40);
+    state.rows = clamp(Number(state.rows) || 18, 4, 80);
   } catch (e) {}
 }
-
 function normalizeColors() {
+  state.colorCount = clamp(Number(state.colorCount) || 4, 2, 12);
   while (state.colors.length < state.colorCount) {
     state.colors.push(DEFAULT_COLORS[state.colors.length % DEFAULT_COLORS.length]);
   }
   if (state.colors.length > state.colorCount) state.colors = state.colors.slice(0, state.colorCount);
 }
-
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 function hexBrightness(hex) {
   const n = parseInt(hex.slice(1),16); const r=(n>>16)&255, g=(n>>8)&255, b=n&255;
@@ -57,28 +57,23 @@ function letter(i) {
   return s;
 }
 
+/* Motif visuel : diamants, chevrons, rayures et cœurs */
 function nearestDiamondCenter(col, row) {
-  const periodX = 8;
-  const periodY = 8;
-  const cxCandidates = [];
-  const cyCandidates = [];
-  const baseX = 3.5;
-  const baseY = 3.5;
-  for (let k=-1;k<=3;k++) cxCandidates.push(baseX + k*periodX);
-  for (let k=-1;k<=3;k++) cyCandidates.push(baseY + k*periodY);
+  const periodX = 8, periodY = 8, baseX = 3.5, baseY = 3.5;
   let best = { d: Infinity, cx: baseX, cy: baseY };
-  for (const cx of cxCandidates) {
-    for (const cy of cyCandidates) {
+  for (let ix=-2; ix<6; ix++) {
+    for (let iy=-2; iy<8; iy++) {
+      const cx = baseX + ix*periodX;
+      const cy = baseY + iy*periodY;
       const d = Math.abs(col-cx) + Math.abs(row-cy);
       if (d < best.d) best = { d, cx, cy };
     }
   }
   return best;
 }
-
 function motifColorIndex(col, row) {
   const count = state.colorCount;
-  if (state.pattern === 'stripes') return (Math.floor(col/2) + row) % count;
+  if (state.pattern === 'stripes') return (Math.floor(col) + row) % count;
   if (state.pattern === 'chevrons') {
     const mid = (state.threads-1)/2;
     const dist = Math.abs(col - mid);
@@ -88,24 +83,58 @@ function motifColorIndex(col, row) {
     const cx = (state.threads-1)/2;
     const dy = row % 8;
     const dx = Math.abs(col-cx);
-    if ((dy===1 && dx<1) || (dy===2 && dx<2) || (dy===3 && dx<3) || (dy===4 && dx<2) || (dy===5 && dx<1)) return 0;
-    return (1 + col + row) % count;
+    if ((dy===1 && dx<1.2) || (dy===2 && dx<2.2) || (dy===3 && dx<3.2) || (dy===4 && dx<2.2) || (dy===5 && dx<1.1)) return 0;
+    return (1 + Math.floor(col) + row) % count;
   }
-  // diamonds - inspired by the user's sample visual.
-  const { d, cx, cy } = nearestDiamondCenter(col, row);
-  if (count <= 2) return d <= 2 ? 0 : 1;
+  const { d } = nearestDiamondCenter(col, row);
+  if (count <= 2) return d <= 2.4 ? 0 : 1;
   if (count === 3) {
-    if (d <= 0.7) return 0;
-    if (d <= 2.2) return 1;
-    return 2;
+    if (d <= 0.8) return 0;
+    if (d <= 2.4) return 2;
+    return 1;
   }
-  // 4+ colors: center, inner white, dark border, light outer diamonds, extras repeat around
-  if (d <= 0.7) return 0;
-  if (d <= 2.1) return 2;
-  if (d <= 3.6) return 1;
-  if (d <= 4.7) return 3;
-  return (4 + Math.floor(d)) % count;
+  if (d <= 0.8) return 0;
+  if (d <= 2.2) return 4 % count; // often white
+  if (d <= 3.7) return 1;
+  if (d <= 4.9) return 3;
+  return (Math.floor(d) + row) % count;
 }
+function threadColor(threadIndex, row=0) {
+  return state.colors[motifColorIndex(threadIndex, row) % state.colors.length];
+}
+function knotType(row, leftThread) {
+  if (state.pattern === 'chevrons') {
+    const mid = (state.threads-1)/2;
+    return leftThread < mid ? 'f' : 'b';
+  }
+  if (state.pattern === 'stripes') return row % 2 ? 'b' : 'f';
+  if (state.pattern === 'hearts') {
+    const cx = (state.threads-1)/2;
+    if (Math.abs(leftThread-cx) < 1.5 && (row % 8) < 3) return row % 2 ? 'fb' : 'bf';
+    return (leftThread + row) % 2 ? 'f' : 'b';
+  }
+  const { cx, cy } = nearestDiamondCenter(leftThread + .5, row);
+  const dx = leftThread + .5 - cx;
+  const dy = row - cy;
+  if (Math.abs(dx) < 0.7 && Math.abs(dy) < 0.7) return 'bf';
+  if (dx <= 0 && dy <= 0) return 'f';
+  if (dx >= 0 && dy <= 0) return 'b';
+  if (dx <= 0 && dy >= 0) return 'fb';
+  return 'bf';
+}
+
+/* Important V7 : vraies paires de fils, donc pair OU impair. */
+function buildKnotList() {
+  const knots = [];
+  for (let r=0; r<state.rows; r++) {
+    const start = r % 2 === 0 ? 0 : 1;
+    for (let left=start; left < state.threads - 1; left += 2) {
+      knots.push({ row:r, left, right:left+1, type:knotType(r,left) });
+    }
+  }
+  return knots;
+}
+function totalKnots() { return buildKnotList().length; }
 
 function renderPalette() {
   normalizeColors();
@@ -150,8 +179,7 @@ function setCanvasSize(canvas, cssHeight) {
   ctx.setTransform(dpr,0,0,dpr,0,0);
   return { width, height: cssHeight, ctx };
 }
-
-function drawDiamondTile(ctx, x, y, w, h, fill, stroke='#32415c') {
+function drawDiamondTile(ctx, x, y, w, h, fill, stroke='rgba(43,51,77,.42)') {
   ctx.beginPath();
   ctx.moveTo(x, y - h/2);
   ctx.lineTo(x + w/2, y);
@@ -161,40 +189,40 @@ function drawDiamondTile(ctx, x, y, w, h, fill, stroke='#32415c') {
   ctx.fillStyle = fill;
   ctx.fill();
   ctx.strokeStyle = stroke;
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 1.15;
   ctx.stroke();
 }
-
 function renderPreview() {
-  const { width, height, ctx } = setCanvasSize(previewCanvas, 140);
+  const { width, height, ctx } = setCanvasSize(previewCanvas, 130);
   ctx.clearRect(0,0,width,height);
   ctx.fillStyle = '#fff';
   roundRect(ctx, 0, 0, width, height, 16); ctx.fill();
-  const cols = Math.max(22, Math.floor(width / 24));
+
+  const tileW = 22;
+  const tileH = 28;
   const rows = 7;
-  const tileW = Math.min(22, width / cols);
-  const tileH = tileW * 1.25;
-  const startX = tileW;
-  const startY = height/2 - (rows-1) * tileH*0.42;
+  const cols = Math.ceil(width / (tileW*.95)) + 2;
+  const startX = 15;
+  const startY = height/2 - (rows-1) * tileH*.39;
 
   if (state.showPreviewGrid) {
-    for (let r=0; r<rows; r++) {
-      for (let c=0; c<cols; c++) {
-        const x = startX + c * tileW * 0.95;
-        const y = startY + r * tileH * 0.8 + ((c%2) ? tileH*0.4 : 0);
-        const color = state.colors[motifColorIndex((c%8), r) % state.colors.length];
-        drawDiamondTile(ctx, x, y, tileW, tileH, color, 'rgba(43,51,77,.35)');
+    for (let c=0; c<cols; c++) {
+      for (let r=0; r<rows; r++) {
+        const x = startX + c * tileW*.95;
+        const y = startY + r * tileH*.78 + (c % 2 ? tileH*.39 : 0);
+        const threadLikeCol = (c % Math.max(4,state.threads));
+        const color = state.colors[motifColorIndex(threadLikeCol, r) % state.colors.length];
+        drawDiamondTile(ctx, x, y, tileW, tileH, color);
       }
     }
   } else {
     for (let c=0; c<cols; c++) {
-      const x = startX + c * tileW * 0.95;
+      const x = startX + c * tileW*.95;
       const color = state.colors[c % state.colors.length];
-      drawDiamondTile(ctx, x, height/2, tileW, tileH*4.3, color, 'rgba(43,51,77,.18)');
+      drawDiamondTile(ctx, x, height/2, tileW, tileH*4, color, 'rgba(43,51,77,.18)');
     }
   }
 }
-
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x+r,y);
@@ -205,118 +233,109 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-function knotType(r, c) {
-  if (state.pattern === 'chevrons') {
-    return c < state.threads/2 ? 'f' : 'b';
-  }
-  if (state.pattern === 'stripes') {
-    return r % 2 ? 'b' : 'f';
-  }
-  if (state.pattern === 'hearts') {
-    const cx = (state.threads-1)/2;
-    if (Math.abs(c-cx) < 1.5 && (r % 8) < 3) return (r % 2 ? 'fb' : 'bf');
-    return (c + r) % 2 ? 'f' : 'b';
-  }
-  // diamonds
-  const { cx, cy } = nearestDiamondCenter(c, r);
-  const dx = c - cx;
-  const dy = r - cy;
-  if (Math.abs(dx) < 0.7 && Math.abs(dy) < 0.7) return 'bf';
-  if (dx <= 0 && dy <= 0) return 'f';
-  if (dx >= 0 && dy <= 0) return 'b';
-  if (dx <= 0 && dy >= 0) return 'fb';
-  return 'bf';
-}
-
-function nodeFillColor(r,c) {
-  const idx = motifColorIndex(c,r) % state.colors.length;
-  return state.colors[idx];
-}
-
-function textSVG(txt,x,y,cls) {
+function textSVG(txt,x,y,cls,parent=svg) {
   const t = document.createElementNS('http://www.w3.org/2000/svg','text');
-  t.textContent = txt; t.setAttribute('x',x); t.setAttribute('y',y); t.setAttribute('class',cls); svg.appendChild(t);
+  t.textContent = txt; t.setAttribute('x',x); t.setAttribute('y',y); t.setAttribute('class',cls); parent.appendChild(t);
 }
-function lineSVG(x1,y1,x2,y2,cls,stroke,width) {
+function lineSVG(x1,y1,x2,y2,cls,stroke,width,parent=svg) {
   const l = document.createElementNS('http://www.w3.org/2000/svg','line');
   l.setAttribute('x1',x1); l.setAttribute('y1',y1); l.setAttribute('x2',x2); l.setAttribute('y2',y2);
-  l.setAttribute('class',cls); l.setAttribute('stroke',stroke); l.setAttribute('stroke-width',width); svg.appendChild(l);
-}
-function drawThreadPair(x,y,w,h,colorA,colorB,type) {
-  // two crossing threads, inspired by the visual shared by the user.
-  if (type === 'f' || type === 'fb') {
-    lineSVG(x - w/2, y - h/2, x + w/2, y + h/2, 'threadLine', colorA, 12);
-    lineSVG(x + w/2, y - h/2, x - w/2, y + h/2, 'threadLine threadGhost', colorB, 9);
-  } else {
-    lineSVG(x + w/2, y - h/2, x - w/2, y + h/2, 'threadLine', colorB, 12);
-    lineSVG(x - w/2, y - h/2, x + w/2, y + h/2, 'threadLine threadGhost', colorA, 9);
-  }
+  l.setAttribute('class',cls); l.setAttribute('stroke',stroke); l.setAttribute('stroke-width',width); parent.appendChild(l);
 }
 function drawNode(x,y,fill,type,idx) {
   const g = document.createElementNS('http://www.w3.org/2000/svg','g');
   g.setAttribute('class','node');
   if (state.done.has(idx)) g.classList.add('done');
   if (state.weave && idx === state.next) g.classList.add('next');
+
   const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
-  circle.setAttribute('cx',x); circle.setAttribute('cy',y); circle.setAttribute('r',24); circle.setAttribute('fill',fill); g.appendChild(circle);
+  circle.setAttribute('cx',x); circle.setAttribute('cy',y); circle.setAttribute('r',23); circle.setAttribute('fill',fill); g.appendChild(circle);
+
   const t = document.createElementNS('http://www.w3.org/2000/svg','text');
   const symbolMap = { f:'↘', b:'↙', fb:'↘↙', bf:'↙↘' };
   t.textContent = symbolMap[type] || '↘';
   t.setAttribute('x',x); t.setAttribute('y',y+1);
   t.setAttribute('class','knotText ' + (hexBrightness(fill) < 140 ? 'light' : ''));
   g.appendChild(t);
+
   g.addEventListener('click', () => onKnotClick(idx));
   svg.appendChild(g);
 }
-
-function getKnotPosition(r,c,gapX,gapY,marginL,marginT) {
-  const offset = (r % 2) ? gapX/2 : 0;
-  return { x: marginL + offset + c*gapX, y: marginT + r*gapY };
+function drawUnpairedMarker(x,y) {
+  const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+  g.setAttribute('class','node unpaired');
+  const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  circle.setAttribute('cx',x); circle.setAttribute('cy',y); circle.setAttribute('r',15); g.appendChild(circle);
+  const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+  t.textContent = 'repos';
+  t.setAttribute('x',x); t.setAttribute('y',y+1); t.setAttribute('class','unpairedText'); g.appendChild(t);
+  svg.appendChild(g);
 }
 
 function renderPattern() {
-  const knotCols = state.threads - 1;
   const gapX = 72;
   const gapY = 62;
-  const marginL = 78;
-  const marginT = 72;
-  const contentW = marginL*2 + knotCols*gapX + gapX;
-  const contentH = marginT*2 + state.rows*gapY;
+  const marginL = 82;
+  const marginT = 78;
+  const contentW = marginL*2 + (state.threads-1)*gapX;
+  const contentH = marginT*2 + (state.rows-1)*gapY + 56;
   svg.setAttribute('viewBox', `0 0 ${contentW} ${contentH}`);
   svg.setAttribute('width', contentW * state.zoom);
   svg.setAttribute('height', contentH * state.zoom);
   svg.style.transform = `scale(${state.zoom})`;
   svg.innerHTML = '';
 
-  if (state.showLetters) {
-    for (let c=0; c<state.threads; c++) {
-      const x = marginL + c * gapX - (gapX/2);
-      textSVG(letter(c), x, 34, 'axisText');
+  // light vertical guides + top threads
+  for (let t=0; t<state.threads; t++) {
+    const x = marginL + t*gapX;
+    lineSVG(x, marginT-46, x, marginT + (state.rows-1)*gapY + 44, 'threadColumnGuide', '#ecedf5', 2);
+    lineSVG(x, marginT-54, x, marginT-24, 'threadStart', threadColor(t,0), 14);
+    if (state.showLetters) {
+      textSVG(letter(t), x, 34, 'axisText');
+      textSVG(letter(t), x, contentH-18, 'axisText');
     }
   }
+
   if (state.showRows) {
     for (let r=0; r<state.rows; r++) {
       const y = marginT + r*gapY + 6;
-      textSVG(String(r+1), 40, y, 'rowText');
+      textSVG(String(r+1), 44, y, 'rowText');
       textSVG(String(r+1), contentW-18, y, 'rowText');
     }
   }
 
   let idx = 0;
   for (let r=0; r<state.rows; r++) {
-    for (let c=0; c<knotCols; c++) {
-      const {x,y} = getKnotPosition(r,c,gapX,gapY,marginL,marginT);
-      const colorA = nodeFillColor(r,c);
-      const colorB = nodeFillColor(r,c+1);
-      const type = knotType(r,c);
-      drawThreadPair(x,y,52,52,colorA,colorB,type);
-      drawNode(x,y,nodeFillColor(r,c),type,idx++);
+    const start = r % 2 === 0 ? 0 : 1;
+    const y = marginT + r*gapY;
+
+    // visual marker for thread resting alone on odd/even alternating rows
+    if (state.threads % 2 === 1) {
+      const restingThread = start === 0 ? state.threads - 1 : 0;
+      const restX = marginL + restingThread * gapX;
+      drawUnpairedMarker(restX, y);
+    }
+
+    for (let left=start; left<state.threads-1; left+=2) {
+      const right = left + 1;
+      const x1 = marginL + left * gapX;
+      const x2 = marginL + right * gapX;
+      const x = (x1 + x2) / 2;
+      const type = knotType(r,left);
+      const colorLeft = threadColor(left,r);
+      const colorRight = threadColor(right,r);
+      const mainFirst = type === 'f' || type === 'fb';
+      lineSVG(x1, y-25, x2, y+25, 'threadLine' + (mainFirst ? '' : ' threadGhost'), colorLeft, mainFirst ? 13 : 9);
+      lineSVG(x2, y-25, x1, y+25, 'threadLine' + (!mainFirst ? '' : ' threadGhost'), colorRight, !mainFirst ? 13 : 9);
+      const fill = state.colors[motifColorIndex(left + .5, r) % state.colors.length];
+      drawNode(x,y,fill,type,idx++);
     }
   }
+
   const note = document.createElementNS('http://www.w3.org/2000/svg','text');
-  note.textContent = 'Version 6 · Correctif iPad · Visuel choisi par Calie';
+  note.textContent = 'Version 7 · Nombre de fils pair ou impair · Créé avec Calie';
   note.setAttribute('x', marginL);
-  note.setAttribute('y', contentH - 18);
+  note.setAttribute('y', contentH - 42);
   note.setAttribute('class','footer-note');
   svg.appendChild(note);
 }
@@ -328,32 +347,33 @@ function onKnotClick(idx) {
   while (state.done.has(state.next) && state.next < totalKnots()) state.next++;
   renderAll();
 }
-function totalKnots() { return state.rows * (state.threads - 1); }
-
 function currentKnotMeta() {
-  const knotCols = state.threads - 1;
-  const idx = clamp(state.next, 0, Math.max(0, totalKnots()-1));
-  const row = Math.floor(idx / knotCols);
-  const col = idx % knotCols;
-  return { idx, row, col, type: knotType(row,col), fill: nodeFillColor(row,col), left: nodeFillColor(row,col), right: nodeFillColor(row,col+1) };
+  const knots = buildKnotList();
+  if (!knots.length) return { row:0, left:0, right:1, type:'f', fill:state.colors[0], leftColor:state.colors[0], rightColor:state.colors[1] || state.colors[0] };
+  const idx = clamp(state.next, 0, Math.max(0, knots.length-1));
+  const k = knots[idx];
+  return {
+    idx,
+    row:k.row,
+    left:k.left,
+    right:k.right,
+    type:k.type,
+    fill: state.colors[motifColorIndex(k.left + .5, k.row) % state.colors.length],
+    leftColor: threadColor(k.left,k.row),
+    rightColor: threadColor(k.right,k.row)
+  };
 }
-
 function renderCurrentKnotPreview() {
-  const { type, fill, left, right, row, col } = currentKnotMeta();
+  const { type, fill, leftColor, rightColor, row, left } = currentKnotMeta();
   const symbol = { f:'↘', b:'↙', fb:'↘↙', bf:'↙↘' }[type];
   currentKnotPreview.innerHTML = `
-    <line x1="35" y1="20" x2="78" y2="63" stroke="${left}" stroke-width="16" stroke-linecap="round" />
-    <line x1="125" y1="20" x2="82" y2="63" stroke="${right}" stroke-width="16" stroke-linecap="round" />
-    <line x1="35" y1="118" x2="78" y2="75" stroke="${left}" stroke-width="16" stroke-linecap="round" opacity=".92" />
-    <line x1="125" y1="118" x2="82" y2="75" stroke="${right}" stroke-width="16" stroke-linecap="round" opacity=".45" />
+    <line x1="35" y1="20" x2="125" y2="118" stroke="${leftColor}" stroke-width="16" stroke-linecap="round" opacity="${type==='f'||type==='fb'?'1':'.45'}" />
+    <line x1="125" y1="20" x2="35" y2="118" stroke="${rightColor}" stroke-width="16" stroke-linecap="round" opacity="${type==='b'||type==='bf'?'1':'.45'}" />
     <circle cx="80" cy="70" r="30" fill="${fill}" stroke="#1f2a44" stroke-width="2" />
     <text x="80" y="72" text-anchor="middle" dominant-baseline="middle" font-size="28" font-weight="900" fill="${hexBrightness(fill)<140?'#fff':'#101625'}">${symbol}</text>
   `;
-  const rowNumber = row + 1;
-  const knotNumber = col + 1;
-  $('#currentKnotText').textContent = `Fais le nœud ${knotNumber} de la rangée ${rowNumber}.`;
+  $('#currentKnotText').textContent = `Fais le nœud entre les fils ${letter(left)} et ${letter(left+1)}, rangée ${row+1}.`;
 }
-
 function renderInfo() {
   $('#threadsValue').textContent = state.threads;
   $('#rowsValue').textContent = state.rows;
@@ -362,31 +382,38 @@ function renderInfo() {
   $('#showLetters').checked = state.showLetters;
   $('#showPreviewGrid').checked = state.showPreviewGrid;
   document.querySelectorAll('.typeBtn').forEach(btn => btn.classList.toggle('active', btn.dataset.type === state.type));
-  $('#summaryLabel').textContent = `${state.type === 'alpha' ? 'Alpha' : 'Normal'} · ${$('#patternSelect').selectedOptions[0].textContent} · ${state.colorCount} couleurs`;
+
+  const patternLabel = $('#patternSelect').selectedOptions[0].textContent;
+  $('#summaryLabel').innerHTML = `${state.type === 'alpha' ? 'Alpha' : 'Normal'} · ${patternLabel} · <b>${state.threads} fils</b> · ${state.colorCount} couleurs`;
   $('#modeBadge').textContent = state.weave ? 'Mode tissage actif' : 'Mode normal';
   $('#modeBadge').style.background = state.weave ? '#e8fff0' : '#eef2ff';
   $('#modeBadge').style.color = state.weave ? '#18803d' : '#4954cf';
   $('#weaveStateBadge').textContent = state.weave ? 'Actif' : 'Inactif';
   $('#weaveStateBadge').classList.toggle('active', state.weave);
+
   $('#infoBox').innerHTML = `
     Type : <b>${state.type === 'alpha' ? 'Alpha' : 'Normal'}</b><br>
-    Fils : <b>${state.threads}</b><br>
+    Fils : <b>${state.threads}</b> ${state.threads % 2 ? '· impair' : '· pair'}<br>
     Rangées : <b>${state.rows}</b><br>
-    Motif : <b>${$('#patternSelect').selectedOptions[0].textContent}</b><br>
+    Motif : <b>${patternLabel}</b><br>
     Couleurs : <b>${state.colorCount}</b><br>
     Nœuds : <b>${totalKnots()}</b>
   `;
 
-  const doneCount = state.done.size;
   const total = totalKnots();
+  state.next = clamp(state.next, 0, total);
+  const doneCount = state.done.size;
   const percent = total ? Math.round((doneCount/total)*100) : 0;
   const meta = currentKnotMeta();
-  $('#weaveProgressText').textContent = `Rangée ${meta.row + 1} sur ${state.rows} · Nœud ${meta.col + 1}`;
+  $('#weaveProgressText').textContent = `Rangée ${meta.row + 1} sur ${state.rows} · ${doneCount}/${total} nœuds`;
   $('#weaveProgressFill').style.width = `${percent}%`;
 }
-
 function renderAll() {
   normalizeColors();
+  // remove invalid done values after thread/row changes
+  const max = totalKnots();
+  state.done = new Set([...state.done].filter(v => v >= 0 && v < max));
+  state.next = clamp(state.next, 0, max);
   renderPalette();
   renderInfo();
   renderPreview();
@@ -394,26 +421,25 @@ function renderAll() {
   renderCurrentKnotPreview();
   saveState();
 }
-
-function exportPreviewPng() {
-  const link = document.createElement('a');
-  link.download = 'bracelet-studio-by-calie-v5.png';
-  link.href = previewCanvas.toDataURL('image/png');
-  link.click();
-}
-
 function resetProject() {
   state.done = new Set();
   state.next = 0;
-  state.zoom = 1;
 }
-
+function exportPreviewPng() {
+  const link = document.createElement('a');
+  link.download = 'bracelet-studio-by-calie-v7.png';
+  link.href = previewCanvas.toDataURL('image/png');
+  link.click();
+}
 function bindUI() {
-  document.querySelectorAll('.typeBtn').forEach(btn => btn.onclick = () => { state.type = btn.dataset.type; renderAll(); });
-  $('#threadsMinus').onclick = () => { state.threads = clamp(state.threads - 2, 6, 24); renderAll(); };
-  $('#threadsPlus').onclick = () => { state.threads = clamp(state.threads + 2, 6, 24); renderAll(); };
-  $('#rowsMinus').onclick = () => { state.rows = clamp(state.rows - 1, 6, 60); renderAll(); };
-  $('#rowsPlus').onclick = () => { state.rows = clamp(state.rows + 1, 6, 60); renderAll(); };
+  document.querySelectorAll('.typeBtn').forEach(btn => btn.onclick = () => { state.type = btn.dataset.type; resetProject(); renderAll(); });
+
+  // V7 : + / - par 1, pour accepter les fils impairs
+  $('#threadsMinus').onclick = () => { state.threads = clamp(state.threads - 1, 3, 40); resetProject(); renderAll(); };
+  $('#threadsPlus').onclick = () => { state.threads = clamp(state.threads + 1, 3, 40); resetProject(); renderAll(); };
+
+  $('#rowsMinus').onclick = () => { state.rows = clamp(state.rows - 1, 4, 80); resetProject(); renderAll(); };
+  $('#rowsPlus').onclick = () => { state.rows = clamp(state.rows + 1, 4, 80); resetProject(); renderAll(); };
   $('#colorsMinus').onclick = () => { state.colorCount = clamp(state.colorCount - 1, 2, 12); normalizeColors(); renderAll(); };
   $('#colorsPlus').onclick = () => { state.colorCount = clamp(state.colorCount + 1, 2, 12); normalizeColors(); renderAll(); };
   $('#addColorBtn').onclick = () => { state.colorCount = clamp(state.colorCount + 1, 2, 12); normalizeColors(); renderAll(); };
@@ -437,7 +463,7 @@ function bindUI() {
     state.next = clamp(state.next + 1, 0, totalKnots());
     renderAll();
   };
-  $('#resetWeaveBtn').onclick = () => { state.done = new Set(); state.next = 0; renderAll(); };
+  $('#resetWeaveBtn').onclick = () => { resetProject(); renderAll(); };
   $('#zoomInBtn').onclick = () => { state.zoom = clamp(state.zoom + 0.1, 0.7, 2); renderAll(); };
   $('#zoomOutBtn').onclick = () => { state.zoom = clamp(state.zoom - 0.1, 0.7, 2); renderAll(); };
   $('#zoomResetBtn').onclick = () => { state.zoom = 1; renderAll(); };
