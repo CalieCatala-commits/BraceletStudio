@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'braceletStudioByCalieV9';
+const STORAGE_KEY = 'braceletStudioByCalieV10';
 const DEFAULT_COLORS = ['#A8D8F0','#3D5CB3','#EF0B0B','#90EAAE','#FFFFFF','#26408B','#F6C9D9','#7FC8B7','#111827','#F4E8B2','#7A4CBC','#13A4C8'];
 
 const state = {
@@ -190,174 +190,166 @@ function diamondPath(ctx, cx, cy, w, h) {
   ctx.lineTo(cx - w/2, cy);
   ctx.closePath();
 }
-function fillDiamond(ctx, cx, cy, w, h, fill, stroke='rgba(25,34,60,.28)', lineWidth=1.2) {
+function fillDiamond(ctx, cx, cy, w, h, fill, stroke='rgba(22,31,55,.34)', lineWidth=1.1) {
   diamondPath(ctx, cx, cy, w, h);
   ctx.fillStyle = fill;
   ctx.fill();
   ctx.strokeStyle = stroke;
   ctx.lineWidth = lineWidth;
   ctx.stroke();
+
+  ctx.save();
+  diamondPath(ctx, cx, cy, w, h);
+  ctx.clip();
+  ctx.strokeStyle = 'rgba(255,255,255,.34)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(cx - w*.22, cy - h*.15);
+  ctx.lineTo(cx + w*.04, cy - h*.40);
+  ctx.stroke();
+  ctx.restore();
 }
-function drawSoftStitches(ctx, x, y, w, h) {
-  const cols = Math.ceil(w / 22);
-  const rows = 5;
-  const c0 = previewColor(0, '#A8D8F0');
-  const c1 = previewColor(1, '#3D5CB3');
-  const c2 = previewColor(2, '#FFFFFF');
-  const c3 = previewColor(3, '#90EAAE');
-  const palette = [c0, c3, c2, c1, c0, c2];
-  for (let i = -2; i < cols + 2; i++) {
+function matrixDiamondColor(col, row, rows, motif='diamonds') {
+  const light = previewColor(0, '#A8D8F0');
+  const dark = previewColor(1, '#3D5CB3');
+  const accent = previewColor(2, '#EF0B0B');
+  const soft = previewColor(3, '#90EAAE');
+  const white = state.colors.find(c => c.toLowerCase() === '#ffffff') || '#FFFFFF';
+
+  if (motif === 'stripes') return previewColor(col + row, light);
+  if (motif === 'chevrons') {
+    const p = col % 10;
+    return (p < 2 || p > 7) ? soft : (p < 5 ? dark : light);
+  }
+  if (motif === 'hearts') {
+    const p = col % 14;
+    const mid = 6.5;
+    const dy = Math.abs(row - Math.floor(rows/2));
+    const d = Math.abs(p - mid) + dy * 1.25;
+    if ((p === 5 || p === 8) && row === 1) return accent;
+    if (d < 3.2 && row < rows-1) return accent;
+    return d < 4.8 ? white : (row % 2 ? light : soft);
+  }
+
+  const period = 14;
+  const p = col % period;
+  const midX = 6.5;
+  const midY = (rows - 1) / 2;
+  const d = Math.abs(p - midX) + Math.abs(row - midY) * 1.35;
+
+  if (d < 1.0) return light;
+  if (d < 2.9) return white;
+  if (d < 4.6) return dark;
+  if (d < 5.8) return soft;
+  if (p === 0 || p === period-1) return accent;
+  return (row % 2 ? light : soft);
+}
+function drawBraceletMatrix(ctx, x, y, w, h) {
+  const rows = 7;
+  const tileW = Math.max(24, Math.min(34, h / 3.9));
+  const tileH = tileW * 1.16;
+  const xStep = tileW * 0.76;
+  const yStep = (h - tileH * .9) / (rows - 1);
+  const cols = Math.ceil(w / xStep) + 4;
+
+  for (let c = -2; c < cols; c++) {
     for (let r = 0; r < rows; r++) {
-      const px = x + i * 22 + (r % 2 ? 10 : 0);
-      const py = y + 18 + r * ((h - 36) / (rows - 1));
-      ctx.save();
-      ctx.translate(px, py);
-      ctx.rotate(Math.PI / 4);
-      ctx.fillStyle = palette[(i + r + 99) % palette.length];
-      ctx.globalAlpha = .70;
-      roundRect(ctx, -6, -13, 12, 26, 5);
-      ctx.fill();
-      ctx.restore();
+      const cx = x + 12 + c * xStep + (r % 2 ? xStep * .50 : 0);
+      const cy = y + tileH/2 + r * yStep;
+      const fill = matrixDiamondColor(c + 50, r, rows, state.pattern);
+      fillDiamond(ctx, cx, cy, tileW, tileH, fill);
     }
   }
 }
-function renderPreviewDiamonds(ctx, x, y, w, h) {
-  const cLight = previewColor(0, '#A8D8F0');
-  const cDark = previewColor(1, '#3D5CB3');
-  const cAccent = previewColor(2, '#EF0B0B');
-  const cSoft = previewColor(3, '#90EAAE');
-  const cWhite = state.colors.find(c => c.toLowerCase() === '#ffffff') || '#FFFFFF';
-  const cy = y + h/2;
-  const spacing = Math.max(170, Math.min(230, w / 4.6));
-  let start = x + spacing * .55;
+function drawLargeMotifOverlay(ctx, x, y, w, h) {
+  if (state.pattern !== 'diamonds') return;
 
-  for (let cx = start; cx < x + w + spacing; cx += spacing) {
-    // large readable diamond
-    fillDiamond(ctx, cx, cy, spacing * .72, h * .86, cDark, 'rgba(10,20,45,.34)', 1.4);
-    fillDiamond(ctx, cx, cy, spacing * .47, h * .56, cWhite, 'rgba(10,20,45,.25)', 1.2);
-    fillDiamond(ctx, cx, cy, spacing * .18, h * .24, cLight, 'rgba(10,20,45,.28)', 1.1);
+  const dark = previewColor(1, '#3D5CB3');
+  const white = state.colors.find(c => c.toLowerCase() === '#ffffff') || '#FFFFFF';
+  const light = previewColor(0, '#A8D8F0');
 
-    // side accents that give a woven friendship bracelet feeling
-    fillDiamond(ctx, cx - spacing*.43, cy, spacing*.17, h*.30, cSoft, 'rgba(10,20,45,.20)', 1);
-    fillDiamond(ctx, cx + spacing*.43, cy, spacing*.17, h*.30, cSoft, 'rgba(10,20,45,.20)', 1);
-    fillDiamond(ctx, cx - spacing*.31, cy - h*.30, spacing*.12, h*.18, cAccent, 'rgba(10,20,45,.16)', 1);
-    fillDiamond(ctx, cx + spacing*.31, cy + h*.30, spacing*.12, h*.18, cAccent, 'rgba(10,20,45,.16)', 1);
-  }
-}
-function renderPreviewChevrons(ctx, x, y, w, h) {
-  const colors = state.colors;
-  const step = 42;
-  const cy = y + h/2;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  for (let i = -2; i < w / step + 4; i++) {
-    const px = x + i * step;
-    const col = colors[(i + 99) % colors.length];
-    ctx.strokeStyle = col;
-    ctx.lineWidth = 15;
-    ctx.beginPath();
-    ctx.moveTo(px, y + 16);
-    ctx.lineTo(px + step/2, cy);
-    ctx.lineTo(px, y + h - 16);
-    ctx.stroke();
-  }
-}
-function renderPreviewStripes(ctx, x, y, w, h) {
-  const step = 28;
-  ctx.lineWidth = 22;
-  ctx.lineCap = 'butt';
-  for (let i=-3;i<w/step+6;i++) {
-    ctx.strokeStyle = state.colors[(i+99) % state.colors.length];
-    ctx.beginPath();
-    ctx.moveTo(x + i*step, y + h + 12);
-    ctx.lineTo(x + i*step + 70, y - 12);
-    ctx.stroke();
-  }
-}
-function renderPreviewHearts(ctx, x, y, w, h) {
-  renderPreviewDiamonds(ctx, x, y, w, h);
-  const cHeart = previewColor(2, '#EF0B0B');
-  const spacing = Math.max(170, Math.min(230, w / 4.6));
-  const cy = y + h/2;
-  for (let cx = x + spacing*.55; cx < x+w+spacing; cx += spacing) {
-    ctx.fillStyle = cHeart;
-    ctx.globalAlpha = .88;
-    ctx.beginPath();
-    ctx.arc(cx-6, cy-5, 7, 0, Math.PI*2);
-    ctx.arc(cx+6, cy-5, 7, 0, Math.PI*2);
-    ctx.moveTo(cx-13, cy-1);
-    ctx.lineTo(cx, cy+16);
-    ctx.lineTo(cx+13, cy-1);
-    ctx.closePath();
-    ctx.fill();
+  const bigW = Math.max(150, Math.min(230, w / 4.2));
+  const bigH = h * .92;
+  for (let cx = x + bigW*.55; cx < x + w + bigW; cx += bigW * 1.12) {
+    ctx.globalAlpha = .18;
+    fillDiamond(ctx, cx, y + h/2, bigW, bigH, dark, 'rgba(22,31,55,.2)', 1);
+    ctx.globalAlpha = .24;
+    fillDiamond(ctx, cx, y + h/2, bigW*.54, bigH*.55, white, 'rgba(22,31,55,.12)', 1);
+    ctx.globalAlpha = .20;
+    fillDiamond(ctx, cx, y + h/2, bigW*.20, bigH*.22, light, 'rgba(22,31,55,.1)', 1);
     ctx.globalAlpha = 1;
   }
 }
+function drawBraceletEnds(ctx, x, y, w, h) {
+  const colors = [previewColor(0,'#A8D8F0'), previewColor(1,'#3D5CB3'), previewColor(3,'#90EAAE')];
+  ctx.lineCap = 'round';
+  ctx.lineWidth = 8;
+  for (let i=0; i<3; i++) {
+    ctx.strokeStyle = colors[i % colors.length];
+    const yy = y + 24 + i * (h-48)/2;
+    ctx.beginPath();
+    ctx.moveTo(x - 8, yy);
+    ctx.lineTo(x + 18, yy + (i===1 ? 0 : i===0 ? 12 : -12));
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x + w + 8, yy);
+    ctx.lineTo(x + w - 18, yy + (i===1 ? 0 : i===0 ? 12 : -12));
+    ctx.stroke();
+  }
+}
 function renderPreview() {
-  const { width, height, ctx } = setCanvasSize(previewCanvas, 170);
+  const { width, height, ctx } = setCanvasSize(previewCanvas, 190);
   ctx.clearRect(0, 0, width, height);
 
-  // soft card background
   ctx.fillStyle = '#ffffff';
-  roundRect(ctx, 0, 0, width, height, 18);
+  roundRect(ctx, 0, 0, width, height, 20);
   ctx.fill();
 
-  const padX = 26;
-  const padY = 22;
+  const padX = 32;
+  const padY = 24;
   const bandX = padX;
   const bandY = padY;
-  const bandW = width - padX * 2;
-  const bandH = height - padY * 2;
+  const bandW = width - padX*2;
+  const bandH = height - padY*2;
 
-  // shadow and band
   ctx.save();
-  ctx.shadowColor = 'rgba(15,23,42,.10)';
-  ctx.shadowBlur = 16;
-  ctx.shadowOffsetY = 4;
+  ctx.shadowColor = 'rgba(15,23,42,.12)';
+  ctx.shadowBlur = 18;
+  ctx.shadowOffsetY = 5;
   ctx.fillStyle = '#ffffff';
   roundRect(ctx, bandX, bandY, bandW, bandH, 20);
   ctx.fill();
   ctx.restore();
 
   roundRect(ctx, bandX, bandY, bandW, bandH, 20);
-  ctx.fillStyle = '#fefeff';
+  ctx.fillStyle = '#fbfdff';
   ctx.fill();
   ctx.strokeStyle = '#dfe4f4';
-  ctx.lineWidth = 1.2;
+  ctx.lineWidth = 1.3;
   ctx.stroke();
 
   ctx.save();
   roundRect(ctx, bandX, bandY, bandW, bandH, 20);
   ctx.clip();
 
-  drawSoftStitches(ctx, bandX, bandY, bandW, bandH);
+  drawBraceletMatrix(ctx, bandX, bandY + 8, bandW, bandH - 16);
+  drawLargeMotifOverlay(ctx, bandX, bandY + 8, bandW, bandH - 16);
 
-  if (state.pattern === 'chevrons') {
-    renderPreviewChevrons(ctx, bandX, bandY, bandW, bandH);
-  } else if (state.pattern === 'stripes') {
-    renderPreviewStripes(ctx, bandX, bandY, bandW, bandH);
-  } else if (state.pattern === 'hearts') {
-    renderPreviewHearts(ctx, bandX, bandY, bandW, bandH);
-  } else {
-    renderPreviewDiamonds(ctx, bandX, bandY, bandW, bandH);
-  }
-
-  // subtle woven horizontal highlights
-  for (let i=0;i<5;i++) {
-    const yy = bandY + 18 + i * ((bandH-36)/4);
-    ctx.strokeStyle = 'rgba(255,255,255,.24)';
+  for (let i=0;i<6;i++) {
+    const yy = bandY + 16 + i*(bandH-32)/5;
+    ctx.strokeStyle = 'rgba(255,255,255,.28)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(bandX + 18, yy);
-    ctx.lineTo(bandX + bandW - 18, yy);
+    ctx.moveTo(bandX + 16, yy);
+    ctx.lineTo(bandX + bandW - 16, yy);
     ctx.stroke();
   }
 
   ctx.restore();
+  drawBraceletEnds(ctx, bandX, bandY+10, bandW, bandH-20);
 
-  // inner border
   roundRect(ctx, bandX, bandY, bandW, bandH, 20);
-  ctx.strokeStyle = 'rgba(44,28,135,.12)';
+  ctx.strokeStyle = 'rgba(44,28,135,.16)';
   ctx.lineWidth = 1.2;
   ctx.stroke();
 }
@@ -471,7 +463,7 @@ function renderPattern() {
   }
 
   const note = document.createElementNS('http://www.w3.org/2000/svg','text');
-  note.textContent = 'Version 9 · Aperçu bracelet simplifié · Créé avec Calie';
+  note.textContent = 'Version 10 · Aperçu type BraceletBook · Créé avec Calie';
   note.setAttribute('x', marginL);
   note.setAttribute('y', contentH - 42);
   note.setAttribute('class','footer-note');
@@ -565,7 +557,7 @@ function resetProject() {
 }
 function exportPreviewPng() {
   const link = document.createElement('a');
-  link.download = 'bracelet-studio-by-calie-v9.png';
+  link.download = 'bracelet-studio-by-calie-v10.png';
   link.href = previewCanvas.toDataURL('image/png');
   link.click();
 }
