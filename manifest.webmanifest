@@ -1,1 +1,9 @@
-{"name":"Bracelet Studio by Calie","short_name":"Bracelet Studio","start_url":"./?v=4","display":"standalone","background_color":"#f7f8fc","theme_color":"#4f46e5","icons":[]}
+{
+  "name": "Bracelet Studio by Calie",
+  "short_name": "Bracelet Studio",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f5f4fb",
+  "theme_color": "#5f55d6",
+  "icons": []
+}
