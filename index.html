@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#5f55d6" />
-  <title>Bracelet Studio by Calie — Version 12</title>
+  <title>Bracelet Studio by Calie — Version 13</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="style.css?v=12" />
+  <link rel="stylesheet" href="style.css?v=13" />
 </head>
 <body>
   <header class="topbar">
@@ -14,13 +14,14 @@
       <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
       <div>
         <h1>Bracelet Studio</h1>
-        <p>by Calie 💜 · V12 flèches modifiables</p>
+        <p>by Calie 💜 · V13 patron éditeur</p>
       </div>
     </div>
     <div class="toolbar">
       <button id="newBtn">Nouveau</button>
       <button id="saveBtn">Enregistrer</button>
       <button id="exportBtn">Exporter PNG</button>
+      <button id="editColorsToggle">Modifier les couleurs</button>
       <button id="editKnotsToggle">Modifier les flèches</button>
       <button id="weaveToggle" class="primary">Mode tissage</button>
     </div>
@@ -99,7 +100,7 @@
 
       <section class="aboutBox">
         <h2>À propos</h2>
-        <p><b>Bracelet Studio by Calie</b><br>Version 12 — éditeur de motif tactile + flèches des nœuds modifiables directement.</p>
+        <p><b>Bracelet Studio by Calie</b><br>Version 13 — le patron de nœuds devient aussi l’éditeur de motif.</p>
       </section>
     </aside>
 
@@ -116,8 +117,8 @@
 
       <section class="card editor-card">
         <div class="card-head">
-          <h2>Éditeur de motif</h2>
-          <span>Touche une case pour changer sa couleur</span>
+          <h2>Ancien éditeur de motif</h2>
+          <span>Optionnel : le vrai éditeur est maintenant le patron de nœuds</span>
         </div>
         <div class="editor-help">
           <button id="selectedColorBtn" class="selected-color">Couleur active</button>
@@ -130,7 +131,7 @@
 
       <section class="card main-pattern-card">
         <div class="card-head inline-head">
-          <h2>Patron de nœuds</h2>
+          <h2>Patron de nœuds / éditeur principal</h2>
           <div class="inline-status">
             <span id="modeBadge">Mode tissage actif</span>
             <button id="zoomOutBtn" class="smallBtn">−</button>
@@ -182,6 +183,6 @@
     </aside>
   </main>
 
-  <script src="script.js?v=12"></script>
+  <script src="script.js?v=13"></script>
 </body>
 </html>
