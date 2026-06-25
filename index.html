@@ -3,92 +3,91 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#7c3aed" />
-  <title>Bracelet Studio V2</title>
+  <meta name="theme-color" content="#4f46e5" />
+  <title>Bracelet Studio by Calie</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="topbar">
-    <div>
-      <h1>Bracelet Studio <span>V2</span></h1>
-      <p>Générateur normal + alpha, optimisé iPad</p>
+    <div class="brand">
+      <div class="logo">✕</div>
+      <div><strong>BRACELET STUDIO</strong><span>by Calie</span></div>
     </div>
-    <div class="actions">
-      <button id="saveBtn">Sauvegarder</button>
+    <nav>
+      <button id="newBtn">Nouveau</button>
+      <button id="saveBtn">Enregistrer</button>
       <button id="exportBtn">Exporter PNG</button>
-      <button id="resetBtn" class="ghost">Nouveau</button>
-    </div>
+      <button id="weaveBtn" class="primary">Mode tissage</button>
+    </nav>
   </header>
 
   <main class="app">
     <aside class="panel">
       <section class="card">
-        <h2>Type de bracelet</h2>
-        <div class="segmented">
-          <button class="active" data-mode="normal">Normal</button>
-          <button data-mode="alpha">Alpha</button>
+        <h2>Paramètres</h2>
+        <label>Type de bracelet</label>
+        <select id="type">
+          <option value="normal">Normal</option>
+          <option value="alpha">Alpha</option>
+        </select>
+
+        <label>Nombre de fils</label>
+        <div class="stepper"><button id="minus">−</button><strong id="threadCount">12</strong><button id="plus">+</button></div>
+
+        <label>Nombre de rangées</label>
+        <input id="rows" type="number" min="4" max="60" value="12" />
+
+        <label>Motif</label>
+        <select id="pattern">
+          <option value="diamonds">Diamants</option>
+          <option value="chevrons">Chevrons</option>
+          <option value="waves">Vagues</option>
+          <option value="hearts">Cœurs</option>
+          <option value="alphaName">Alpha prénom</option>
+        </select>
+
+        <div id="alphaBox" class="hidden">
+          <label>Texte Alpha</label>
+          <input id="alphaText" value="CALIE" maxlength="12" />
         </div>
       </section>
 
       <section class="card">
-        <h2>Réglages</h2>
-        <label>Motif
-          <select id="patternSelect">
-            <option value="chevron">Chevrons</option>
-            <option value="diamonds">Diamants</option>
-            <option value="waves">Vagues</option>
-            <option value="hearts">Cœurs</option>
-            <option value="alphaName">Alpha prénom</option>
-          </select>
-        </label>
-        <label>Nombre de fils
-          <input id="threadsInput" type="range" min="6" max="24" step="2" value="12" />
-          <strong id="threadsValue">12</strong>
-        </label>
-        <label>Nombre de rangées
-          <input id="rowsInput" type="range" min="12" max="64" value="30" />
-          <strong id="rowsValue">30</strong>
-        </label>
-        <label id="alphaTextWrap">Texte alpha
-          <input id="alphaText" type="text" value="LOVE" maxlength="12" />
-        </label>
+        <h2>Couleurs des fils</h2>
+        <div id="palette" class="palette"></div>
+        <input id="colorPicker" type="color" class="hidden" />
+        <p class="hint">Touche une couleur pour la modifier.</p>
       </section>
 
       <section class="card">
-        <h2>Couleurs</h2>
-        <div id="palette" class="palette"></div>
-        <button id="addColorBtn" class="wide">Ajouter une couleur</button>
-      </section>
-
-      <section class="card small">
-        <h2>Mode tissage</h2>
-        <p>Touche un nœud pour le marquer comme fait. La progression est gardée sur l’iPad.</p>
-        <button id="clearProgressBtn" class="wide ghost">Effacer progression</button>
+        <h2>Options</h2>
+        <label class="check"><input id="showRows" type="checkbox" checked> Afficher les rangées</label>
+        <label class="check"><input id="showLetters" type="checkbox" checked> Afficher les lettres</label>
+        <label class="check"><input id="realistic" type="checkbox" checked> Aperçu réaliste</label>
+        <button id="resetProgress">Réinitialiser tissage</button>
       </section>
     </aside>
 
     <section class="workspace">
-      <div class="preview card">
-        <div class="section-title">
-          <h2>Aperçu du bracelet</h2>
-          <span id="statusText">Prêt</span>
-        </div>
-        <canvas id="braceletCanvas" width="1200" height="220"></canvas>
+      <div class="card preview-card">
+        <h2>Aperçu du bracelet</h2>
+        <canvas id="braceletPreview" height="84"></canvas>
       </div>
 
-      <div class="board card">
-        <div class="section-title">
-          <h2>Patron de nœuds</h2>
-          <span>Pince avec 2 doigts pour zoomer</span>
+      <div class="card pattern-card">
+        <div class="pattern-head">
+          <div><h2>Patron de nœuds</h2><p>Sur iPad : glisse avec le doigt, pince pour zoomer.</p></div>
+          <div class="legend"><span>↘ avant</span><span>↙ arrière</span><span>↘↙ av-arr</span><span>↙↘ arr-av</span></div>
         </div>
-        <div class="gridWrap" id="gridWrap">
-          <canvas id="patternCanvas" width="1200" height="1600"></canvas>
+        <div id="patternWrap" class="pattern-wrap">
+          <svg id="patternSvg"></svg>
         </div>
       </div>
     </section>
   </main>
 
+  <footer>Bracelet Studio by Calie ❤️ — version 0.3</footer>
   <script src="script.js"></script>
 </body>
 </html>
