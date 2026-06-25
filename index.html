@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#5f55d6" />
-  <title>Bracelet Studio by Calie — Version 24</title>
+  <title>Bracelet Studio by Calie — Version 25</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="style.css?v=24" />
+  <link rel="stylesheet" href="style.css?v=25" />
 </head>
 <body>
   <header class="topbar">
@@ -14,7 +14,7 @@
       <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
       <div>
         <h1>Bracelet Studio</h1>
-        <p>by Calie 💜 · V24 couleurs des fils</p>
+        <p>by Calie 💜 · V25 aperçu à gauche</p>
       </div>
     </div>
     <div class="toolbar">
@@ -29,6 +29,16 @@
 
   <main class="app-grid">
     <aside class="card sidebar">
+      <section class="preview-left-block">
+        <div class="card-head">
+          <h2>Aperçu du bracelet</h2>
+          <span id="summaryLabel">Normal · 9 fils · motif 14×7 · 4 couleurs</span>
+        </div>
+        <div class="preview-wrap preview-wrap-left">
+          <canvas id="previewCanvas" width="1300" height="210"></canvas>
+        </div>
+      </section>
+
       <section>
         <h2>Paramètres</h2>
 
@@ -107,29 +117,12 @@
 
       <section class="aboutBox">
         <h2>À propos</h2>
-        <p><b>Bracelet Studio by Calie</b><br>Version 24 — palette du bracelet et attribution des couleurs aux fils A, B, C…</p>
+        <p><b>Bracelet Studio by Calie</b><br>Version 25 — aperçu en losanges à gauche, sans choix de style et sans bloc informations.</p>
       </section>
     </aside>
 
     <section class="center-column">
-      <section class="card">
-        <div class="card-head">
-          <h2>Aperçu du bracelet</h2>
-          <div class="preview-head-controls">
-            <span id="summaryLabel">Normal · 9 fils · 4 couleurs</span>
-            <select id="previewStyleSelect">
-              <option value="knots">Nœuds</option>
-              <option value="circles">Ronds</option>
-              <option value="diamonds">Losanges</option>
-            </select>
-          </div>
-        </div>
-        <div class="preview-wrap">
-          <canvas id="previewCanvas" width="1300" height="210"></canvas>
-        </div>
-      </section>
-
-      <section class="card main-pattern-card">
+<section class="card main-pattern-card">
         <div class="card-head inline-head">
           <h2>Patron interactif</h2>
           <div class="inline-status">
@@ -165,13 +158,7 @@
           <div class="legend-item"><div class="knot-icon-card" data-knot="bf"></div><p>Arrière-avant</p></div>
         </div>
       </section>
-
-      <section>
-        <h2>Informations</h2>
-        <div id="infoBox" class="infoBox"></div>
-      </section>
-
-      <section class="weave-box">
+<section class="weave-box">
         <div class="weave-head">
           <h2>Mode tissage</h2>
           <span id="weaveStateBadge" class="state-pill active">Actif</span>
@@ -193,6 +180,6 @@
     </aside>
   </main>
 
-  <script src="script.js?v=24"></script>
+  <script src="script.js?v=25"></script>
 </body>
 </html>

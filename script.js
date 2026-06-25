@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'braceletStudioByCalieV24';
+const STORAGE_KEY = 'braceletStudioByCalieV25';
 const DEFAULT_COLORS = ['#A8D8F0','#3D5CB3','#EF0B0B','#90EAAE','#FFFFFF','#26408B','#F6C9D9','#7FC8B7','#111827','#F4E8B2','#7A4CBC','#13A4C8'];
 
 const state = {
@@ -59,7 +59,7 @@ function normalizeAll() {
   while (state.colors.length < state.colorCount) state.colors.push(DEFAULT_COLORS[state.colors.length % DEFAULT_COLORS.length]);
   if (state.colors.length > state.colorCount) state.colors = state.colors.slice(0, state.colorCount);
   state.selectedColor = clamp(Number(state.selectedColor)||0, 0, state.colorCount-1);
-  if (!['knots','circles','diamonds'].includes(state.previewStyle)) state.previewStyle = 'knots';
+  state.previewStyle = 'diamonds';
   if (!Array.isArray(state.threadColors)) state.threadColors = [];
   for (let i=0; i<state.threads; i++) {
     if (state.threadColors[i] === undefined) state.threadColors[i] = i % state.colorCount;
@@ -514,13 +514,7 @@ function renderPreview() {
     const rightColor = visual.rightColor;
     const size = tileH * .43;
 
-    if (state.previewStyle === 'circles') {
-      drawSimpleCircle(cx,cy,size,fill);
-    } else if (state.previewStyle === 'diamonds') {
-      fillDiamond(ctx,cx,cy,tileW,tileH,fill,'rgba(22,31,55,.32)');
-    } else {
-      drawTrueMiniKnot(cx,cy,size,fill,type,leftColor,rightColor);
-    }
+    fillDiamond(ctx,cx,cy,tileW,tileH,fill,'rgba(22,31,55,.32)');
   });
 
   ctx.restore();
@@ -530,10 +524,9 @@ function renderPreview() {
   ctx.lineWidth=1.1;
   ctx.stroke();
 
-  const label = state.previewStyle === 'circles' ? 'ronds' : (state.previewStyle === 'diamonds' ? 'losanges' : 'mini-nœuds');
   ctx.fillStyle='rgba(23,32,51,.62)';
   ctx.font='700 12px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
-  ctx.fillText(`${knots.length} ${label} = ${knots.length} nœuds`, bandX + 14, bandY + bandH - 12);
+  ctx.fillText(`${knots.length} losanges = ${knots.length} nœuds`, bandX + 14, bandY + bandH - 12);
 }
 
 function renderMotifEditor() {
@@ -748,7 +741,7 @@ function renderPattern() {
       drawNode(x,y,visual.fill,type,idx++);
     }
   }
-  svgText(svg,'Version 24 · Couleurs des fils · Créé avec Calie',marginL,contentH-42,'footer-note');
+  svgText(svg,'Version 25 · Aperçu à gauche · Créé avec Calie',marginL,contentH-42,'footer-note');
 }
 function onKnotClick(idx) {
   const knots = buildKnotList();
@@ -886,7 +879,10 @@ function renderInfo() {
   $('#modeBadge').textContent=state.editColors?'Mode édition des couleurs':(state.editKnots?'Mode édition des flèches':(state.weave?'Mode tissage actif':'Mode normal'));
   $('#weaveStateBadge').textContent=(state.editKnots||state.editColors)?'Pause édition':(state.weave?'Actif':'Inactif');
   $('#weaveStateBadge').classList.toggle('active',state.weave && !state.editKnots && !state.editColors);
-  $('#infoBox').innerHTML=`Type : <b>${state.type==='alpha'?'Alpha':'Normal'}</b><br>Fils : <b>${state.threads}</b> ${state.threads%2?'· impair':'· pair'}<br>Rangées : <b>${state.rows}</b><br>Motif : <b>${state.motifWidth}×${state.motifHeight}</b><br>Couleurs : <b>${state.colorCount}</b><br>Nœuds : <b>${totalKnots()}</b><br>Flèches modifiées : <b>${Object.keys(state.customKnots||{}).length}</b><br>Couleurs modifiées sur le patron : <b>${Object.keys(state.customColors||{}).length}</b><br>Propagation : <b>active</b>`;
+  const infoBox = $('#infoBox');
+  if (infoBox) {
+    infoBox.innerHTML=`Type : <b>${state.type==='alpha'?'Alpha':'Normal'}</b><br>Fils : <b>${state.threads}</b> ${state.threads%2?'· impair':'· pair'}<br>Rangées : <b>${state.rows}</b><br>Motif : <b>${state.motifWidth}×${state.motifHeight}</b><br>Couleurs : <b>${state.colorCount}</b><br>Nœuds : <b>${totalKnots()}</b><br>Flèches modifiées : <b>${Object.keys(state.customKnots||{}).length}</b><br>Couleurs modifiées sur le patron : <b>${Object.keys(state.customColors||{}).length}</b><br>Propagation : <b>active</b>`;
+  }
   const editBtn=$('#editKnotsToggle'); if(editBtn){editBtn.classList.toggle('active',state.editKnots); editBtn.textContent=state.editKnots?'Édition flèches active':'Modifier les flèches';}
   const colorEditBtn=$('#editColorsToggle'); if(colorEditBtn){colorEditBtn.classList.toggle('active',state.editColors); colorEditBtn.textContent=state.editColors?'Édition couleurs active':'Modifier les couleurs';}
   const total=totalKnots();
@@ -908,7 +904,7 @@ function renderAll() {
 }
 function exportPreviewPng() {
   const link=document.createElement('a');
-  link.download='bracelet-studio-by-calie-v24.png';
+  link.download='bracelet-studio-by-calie-v25.png';
   link.href=previewCanvas.toDataURL('image/png');
   link.click();
 }

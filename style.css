@@ -387,3 +387,27 @@ label{display:block;margin:11px 0 7px;font-weight:700;font-size:14px}
   padding:0 8px;
   font-size:12px;
 }
+
+/* V25 : aperçu à gauche, seulement en losanges */
+.preview-left-block{
+  padding-bottom:18px;
+  border-bottom:1px solid #eceaf6;
+  margin-bottom:18px;
+}
+.preview-wrap-left{
+  padding:10px 0 0;
+}
+.preview-wrap-left canvas{
+  width:100%;
+  height:220px !important;
+}
+.sidebar #summaryLabel{
+  display:inline-block;
+  color:#5c6782;
+  font-weight:700;
+  font-size:13px;
+  line-height:1.35;
+}
+.center-column{
+  grid-template-rows:1fr;
+}
