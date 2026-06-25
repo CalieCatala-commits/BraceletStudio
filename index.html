@@ -3,78 +3,90 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#4f46e5" />
+  <meta name="theme-color" content="#7c3aed" />
+  <title>Bracelet Studio V2</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="stylesheet" href="style.css" />
-  <title>Bracelet Studio</title>
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><div class="logo">✖</div><strong>BRACELET<br>STUDIO</strong></div>
-    <nav>
-      <button id="newBtn">Nouveau</button>
-      <button id="openBtn">Ouvrir</button>
-      <button id="saveBtn">Enregistrer</button>
-      <button id="exportBtn">Exporter</button>
-    </nav>
+    <div>
+      <h1>Bracelet Studio <span>V2</span></h1>
+      <p>Générateur normal + alpha, optimisé iPad</p>
+    </div>
+    <div class="actions">
+      <button id="saveBtn">Sauvegarder</button>
+      <button id="exportBtn">Exporter PNG</button>
+      <button id="resetBtn" class="ghost">Nouveau</button>
+    </div>
   </header>
 
-  <main class="layout">
+  <main class="app">
     <aside class="panel">
-      <section>
-        <h2>Paramètres</h2>
-        <label>Nombre de fils</label>
-        <div class="stepper"><button id="minusThreads">−</button><b id="threadsLabel">12</b><button id="plusThreads">+</button></div>
-        <label>Nombre de rangées</label>
-        <input id="rowsInput" type="number" min="2" max="80" value="12">
-        <label>Motif</label>
-        <select id="patternType">
-          <option value="diamonds">Diamants</option>
-          <option value="chevrons">Chevrons</option>
-          <option value="waves">Vagues</option>
-        </select>
+      <section class="card">
+        <h2>Type de bracelet</h2>
+        <div class="segmented">
+          <button class="active" data-mode="normal">Normal</button>
+          <button data-mode="alpha">Alpha</button>
+        </div>
       </section>
 
-      <section>
-        <h2>Couleurs des fils</h2>
+      <section class="card">
+        <h2>Réglages</h2>
+        <label>Motif
+          <select id="patternSelect">
+            <option value="chevron">Chevrons</option>
+            <option value="diamonds">Diamants</option>
+            <option value="waves">Vagues</option>
+            <option value="hearts">Cœurs</option>
+            <option value="alphaName">Alpha prénom</option>
+          </select>
+        </label>
+        <label>Nombre de fils
+          <input id="threadsInput" type="range" min="6" max="24" step="2" value="12" />
+          <strong id="threadsValue">12</strong>
+        </label>
+        <label>Nombre de rangées
+          <input id="rowsInput" type="range" min="12" max="64" value="30" />
+          <strong id="rowsValue">30</strong>
+        </label>
+        <label id="alphaTextWrap">Texte alpha
+          <input id="alphaText" type="text" value="LOVE" maxlength="12" />
+        </label>
+      </section>
+
+      <section class="card">
+        <h2>Couleurs</h2>
         <div id="palette" class="palette"></div>
-        <p>Touche une couleur pour la modifier.</p>
+        <button id="addColorBtn" class="wide">Ajouter une couleur</button>
       </section>
 
-      <section>
-        <h2>Options</h2>
-        <label><input id="showRows" type="checkbox" checked> Numéros de rangées</label>
-        <label><input id="showLetters" type="checkbox" checked> Lettres des fils</label>
-        <label><input id="mirrorH" type="checkbox"> Symétrie horizontale</label>
+      <section class="card small">
+        <h2>Mode tissage</h2>
+        <p>Touche un nœud pour le marquer comme fait. La progression est gardée sur l’iPad.</p>
+        <button id="clearProgressBtn" class="wide ghost">Effacer progression</button>
       </section>
-
-      <button class="primary" id="generateBtn">Générer le patron</button>
     </aside>
 
-    <section class="work">
-      <div class="card">
-        <h2>Aperçu du bracelet</h2>
-        <div id="bracelet" class="bracelet"></div>
+    <section class="workspace">
+      <div class="preview card">
+        <div class="section-title">
+          <h2>Aperçu du bracelet</h2>
+          <span id="statusText">Prêt</span>
+        </div>
+        <canvas id="braceletCanvas" width="1200" height="220"></canvas>
       </div>
-      <div class="card gridcard">
-        <h2>Patron de nœuds</h2>
-        <div class="hint">Sur iPad : glisse avec le doigt pour te déplacer dans le patron.</div>
-        <div class="patternWrap"><div id="pattern" class="pattern"></div></div>
+
+      <div class="board card">
+        <div class="section-title">
+          <h2>Patron de nœuds</h2>
+          <span>Pince avec 2 doigts pour zoomer</span>
+        </div>
+        <div class="gridWrap" id="gridWrap">
+          <canvas id="patternCanvas" width="1200" height="1600"></canvas>
+        </div>
       </div>
     </section>
-
-    <aside class="info">
-      <div class="card">
-        <h2>Légende</h2>
-        <p>↘ Nœud avant</p><p>↙ Nœud arrière</p><p>⇄ Avant-arrière</p><p>⇆ Arrière-avant</p>
-      </div>
-      <div class="card">
-        <h2>Informations</h2>
-        <p>Fils : <b id="infoThreads">12</b></p>
-        <p>Rangées : <b id="infoRows">12</b></p>
-      </div>
-      <div class="tip">💡 Tu peux ajouter cette page à l’écran d’accueil de l’iPad depuis Safari.</div>
-    </aside>
   </main>
 
   <script src="script.js"></script>
