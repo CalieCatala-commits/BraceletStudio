@@ -411,3 +411,19 @@ label{display:block;margin:11px 0 7px;font-weight:700;font-size:14px}
 .center-column{
   grid-template-rows:1fr;
 }
+
+/* V26 : palette et fils fusionnés à droite */
+.merged-palette-panel{
+  padding-bottom:16px;
+  border-bottom:1px solid #eceaf6;
+  margin-bottom:16px;
+}
+.merged-palette-note{
+  margin:12px 0 8px;
+}
+.sidepanel-right .palette-list{
+  margin-top:10px;
+}
+.sidepanel-right .thread-color-list{
+  margin-top:8px;
+}

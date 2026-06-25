@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#5f55d6" />
-  <title>Bracelet Studio by Calie — Version 25</title>
+  <title>Bracelet Studio by Calie — Version 26</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="style.css?v=25" />
+  <link rel="stylesheet" href="style.css?v=26" />
 </head>
 <body>
   <header class="topbar">
@@ -14,7 +14,7 @@
       <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
       <div>
         <h1>Bracelet Studio</h1>
-        <p>by Calie 💜 · V25 aperçu à gauche</p>
+        <p>by Calie 💜 · V26 palette fusionnée à droite</p>
       </div>
     </div>
     <div class="toolbar">
@@ -79,26 +79,6 @@
       </section>
 
       <section>
-        <h2>Couleurs</h2>
-        <label>Nombre de couleurs</label>
-        <div class="stepper">
-          <button id="colorsMinus">−</button>
-          <strong id="colorsValue">4</strong>
-          <button id="colorsPlus">+</button>
-        </div>
-        <div id="paletteList" class="palette-list"></div>
-        <input id="colorPicker" type="color" hidden />
-        <button id="addColorBtn" class="ghost full">+ Ajouter une couleur</button>
-      </section>
-
-      <section>
-        <h2>Couleurs des fils</h2>
-        <p class="muted mini">Choisis la couleur de départ de chaque fil : A, B, C…</p>
-        <div id="threadColorList" class="thread-color-list"></div>
-        <button id="resetThreadColorsBtn" class="ghost full">Réinitialiser les fils</button>
-      </section>
-
-      <section>
         <h2>Motifs rapides</h2>
         <div class="quick-grid">
           <button id="diamondPreset">Diamants</button>
@@ -117,7 +97,7 @@
 
       <section class="aboutBox">
         <h2>À propos</h2>
-        <p><b>Bracelet Studio by Calie</b><br>Version 25 — aperçu en losanges à gauche, sans choix de style et sans bloc informations.</p>
+        <p><b>Bracelet Studio by Calie</b><br>Version 26 — nombre de couleurs et couleurs des fils fusionnés dans un bloc à droite.</p>
       </section>
     </aside>
 
@@ -148,7 +128,24 @@
       </section>
     </section>
 
+    
     <aside class="card sidepanel-right">
+      <section class="merged-palette-panel">
+        <h2>Couleurs & fils</h2>
+        <label>Nombre de couleurs</label>
+        <div class="stepper">
+          <button id="colorsMinus">−</button>
+          <strong id="colorsValue">4</strong>
+          <button id="colorsPlus">+</button>
+        </div>
+        <div id="paletteList" class="palette-list"></div>
+        <input id="colorPicker" type="color" hidden />
+        <button id="addColorBtn" class="ghost full">+ Ajouter une couleur</button>
+
+        <p class="muted mini merged-palette-note">Choisis ensuite la couleur de départ de chaque fil : A, B, C…</p>
+        <div id="threadColorList" class="thread-color-list"></div>
+        <button id="resetThreadColorsBtn" class="ghost full">Réinitialiser les fils</button>
+      </section>
       <section>
         <h2>Légende</h2>
         <div class="legend-grid">
@@ -180,6 +177,6 @@
     </aside>
   </main>
 
-  <script src="script.js?v=25"></script>
+  <script src="script.js?v=26"></script>
 </body>
 </html>
