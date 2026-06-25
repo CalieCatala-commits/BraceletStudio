@@ -535,3 +535,11 @@ label{display:block;margin:11px 0 7px;font-weight:700;font-size:14px}
 .quick-grid button{
   font-weight:850;
 }
+
+/* V30 : paramètres encore plus compacts */
+.compact-params{
+  padding-bottom:12px;
+}
+.compact-params .compact-note{
+  margin-top:6px;
+}

@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'braceletStudioByCalieV29';
+const STORAGE_KEY = 'braceletStudioByCalieV30';
 const DEFAULT_COLORS = ['#A8D8F0','#3D5CB3','#EF0B0B','#90EAAE','#FFFFFF','#26408B','#F6C9D9','#7FC8B7','#111827','#F4E8B2','#7A4CBC','#13A4C8'];
 
 const state = {
@@ -795,7 +795,7 @@ function renderPattern() {
       drawNode(x,y,visual.fill,type,idx++);
     }
   }
-  svgText(svg,'Version 29 · Motifs rapides corrigés · Créé avec Calie',marginL,contentH-42,'footer-note');
+  svgText(svg,'Version 30 · Paramètres simplifiés · Créé avec Calie',marginL,contentH-42,'footer-note');
 }
 function onKnotClick(idx) {
   const knots = buildKnotList();
@@ -920,14 +920,14 @@ function renderThreadAssignments() {
 function renderInfo() {
   $('#threadsValue').textContent=state.threads;
   $('#rowsValue').textContent=state.rows;
-  $('#motifWidthValue').textContent=state.motifWidth;
-  $('#motifHeightValue').textContent=state.motifHeight;
+  const motifWidthValue=$('#motifWidthValue'); if (motifWidthValue) motifWidthValue.textContent=state.motifWidth;
+  const motifHeightValue=$('#motifHeightValue'); if (motifHeightValue) motifHeightValue.textContent=state.motifHeight;
   $('#showRows').checked=state.showRows;
   $('#showLetters').checked=state.showLetters;
   $('#showPreviewGrid').checked=state.showPreviewGrid;
   const pss=$('#previewStyleSelect'); if (pss) pss.value = state.previewStyle;
   document.querySelectorAll('.typeBtn').forEach(btn=>btn.classList.toggle('active',btn.dataset.type===state.type));
-  $('#summaryLabel').innerHTML=`${state.type==='alpha'?'Alpha':'Normal'} · <b>${state.threads} fils</b> · motif ${state.motifWidth}×${state.motifHeight} · ${state.colorCount} couleurs`;
+  $('#summaryLabel').innerHTML=`Normal · <b>${state.threads} fils</b> · ${state.rows} rangées · ${state.colorCount} couleurs`;
   $('#modeBadge').textContent=state.editColors?'Mode édition des couleurs':(state.editKnots?'Mode édition des flèches':(state.weave?'Mode tissage actif':'Mode normal'));
   $('#weaveStateBadge').textContent=(state.editKnots||state.editColors)?'Pause édition':(state.weave?'Actif':'Inactif');
   $('#weaveStateBadge').classList.toggle('active',state.weave && !state.editKnots && !state.editColors);
@@ -960,7 +960,7 @@ function renderAll() {
 }
 function exportPreviewPng() {
   const link=document.createElement('a');
-  link.download='bracelet-studio-by-calie-v29.png';
+  link.download='bracelet-studio-by-calie-v30.png';
   link.href=previewCanvas.toDataURL('image/png');
   link.click();
 }
@@ -970,10 +970,14 @@ function bindUI() {
   $('#threadsPlus').onclick=()=>{state.threads=clamp(state.threads+1,3,40);resetWeave();renderAll();};
   $('#rowsMinus').onclick=()=>{state.rows=clamp(state.rows-1,4,90);resetWeave();renderAll();};
   $('#rowsPlus').onclick=()=>{state.rows=clamp(state.rows+1,4,90);resetWeave();renderAll();};
-  $('#motifWidthMinus').onclick=()=>{state.motifWidth=clamp(state.motifWidth-1,4,40);ensureMotif();resetWeave();renderAll();};
-  $('#motifWidthPlus').onclick=()=>{state.motifWidth=clamp(state.motifWidth+1,4,40);ensureMotif();resetWeave();renderAll();};
-  $('#motifHeightMinus').onclick=()=>{state.motifHeight=clamp(state.motifHeight-1,3,24);ensureMotif();resetWeave();renderAll();};
-  $('#motifHeightPlus').onclick=()=>{state.motifHeight=clamp(state.motifHeight+1,3,24);ensureMotif();resetWeave();renderAll();};
+  const motifWidthMinus=$('#motifWidthMinus');
+  const motifWidthPlus=$('#motifWidthPlus');
+  const motifHeightMinus=$('#motifHeightMinus');
+  const motifHeightPlus=$('#motifHeightPlus');
+  if (motifWidthMinus) motifWidthMinus.onclick=()=>{state.motifWidth=clamp(state.motifWidth-1,4,40);ensureMotif();resetWeave();renderAll();};
+  if (motifWidthPlus) motifWidthPlus.onclick=()=>{state.motifWidth=clamp(state.motifWidth+1,4,40);ensureMotif();resetWeave();renderAll();};
+  if (motifHeightMinus) motifHeightMinus.onclick=()=>{state.motifHeight=clamp(state.motifHeight-1,3,24);ensureMotif();resetWeave();renderAll();};
+  if (motifHeightPlus) motifHeightPlus.onclick=()=>{state.motifHeight=clamp(state.motifHeight+1,3,24);ensureMotif();resetWeave();renderAll();};
   $('#colorsMinus').onclick=()=>{state.colorCount=clamp(state.colorCount-1,2,12);normalizeAll();resetWeave();renderAll();};
   $('#colorsPlus').onclick=()=>{state.colorCount=clamp(state.colorCount+1,2,12);normalizeAll();resetWeave();renderAll();};
   $('#addColorBtn').onclick=()=>{state.colorCount=clamp(state.colorCount+1,2,12);normalizeAll();renderAll();};
