@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'braceletStudioByCalieV5';
+const STORAGE_KEY = 'braceletStudioByCalieV6';
 const DEFAULT_COLORS = ['#A8D8F0','#3D5CB3','#FFFFFF','#8FCBEA','#C7D1E3','#26408B','#F6C9D9','#7FC8B7','#111827','#F4E8B2','#7A4CBC','#13A4C8'];
 
 const state = {
@@ -314,7 +314,7 @@ function renderPattern() {
     }
   }
   const note = document.createElementNS('http://www.w3.org/2000/svg','text');
-  note.textContent = 'Version 5 · Visuel inspiré du motif en diamants choisi par Calie';
+  note.textContent = 'Version 6 · Correctif iPad · Visuel choisi par Calie';
   note.setAttribute('x', marginL);
   note.setAttribute('y', contentH - 18);
   note.setAttribute('class','footer-note');
