@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#5f55d6" />
-  <title>Bracelet Studio by Calie — Version 15</title>
+  <title>Bracelet Studio by Calie — Version 18</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="style.css?v=15" />
+  <link rel="stylesheet" href="style.css?v=18" />
 </head>
 <body>
   <header class="topbar">
@@ -14,7 +14,7 @@
       <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
       <div>
         <h1>Bracelet Studio</h1>
-        <p>by Calie 💜 · V15 aperçu fidèle</p>
+        <p>by Calie 💜 · V18 vrais mini-nœuds</p>
       </div>
     </div>
     <div class="toolbar">
@@ -100,7 +100,7 @@
 
       <section class="aboutBox">
         <h2>À propos</h2>
-        <p><b>Bracelet Studio by Calie</b><br>Version 15 — aperçu fidèle : 1 nœud du patron = 1 losange dans l’aperçu.</p>
+        <p><b>Bracelet Studio by Calie</b><br>Version 18 — aperçu en vrais mini-nœuds : mêmes couleurs et mêmes flèches que le patron.</p>
       </section>
     </aside>
 
@@ -108,7 +108,14 @@
       <section class="card">
         <div class="card-head">
           <h2>Aperçu du bracelet</h2>
-          <span id="summaryLabel">Normal · 9 fils · 4 couleurs</span>
+          <div class="preview-head-controls">
+            <span id="summaryLabel">Normal · 9 fils · 4 couleurs</span>
+            <select id="previewStyleSelect">
+              <option value="knots">Nœuds</option>
+              <option value="circles">Ronds</option>
+              <option value="diamonds">Losanges</option>
+            </select>
+          </div>
         </div>
         <div class="preview-wrap">
           <canvas id="previewCanvas" width="1300" height="210"></canvas>
@@ -193,6 +200,6 @@
     </aside>
   </main>
 
-  <script src="script.js?v=15"></script>
+  <script src="script.js?v=18"></script>
 </body>
 </html>

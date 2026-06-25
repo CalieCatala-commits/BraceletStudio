@@ -279,3 +279,17 @@ label{display:block;margin:11px 0 7px;font-weight:700;font-size:14px}
 #previewCanvas{
   height:160px !important;
 }
+
+/* V16 : aperçu fidèle mais plus compact */
+#previewCanvas{
+  height:170px !important;
+}
+
+/* V17 : choix du style d'aperçu */
+.preview-head-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+#previewStyleSelect{min-height:38px;padding:7px 11px;border-radius:12px;background:#fff}
+
+/* V18 : aperçu mini-nœuds plus fidèle */
+#previewCanvas{
+  height:180px !important;
+}

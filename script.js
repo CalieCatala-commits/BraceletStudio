@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'braceletStudioByCalieV15';
+const STORAGE_KEY = 'braceletStudioByCalieV18';
 const DEFAULT_COLORS = ['#A8D8F0','#3D5CB3','#EF0B0B','#90EAAE','#FFFFFF','#26408B','#F6C9D9','#7FC8B7','#111827','#F4E8B2','#7A4CBC','#13A4C8'];
 
 const state = {
@@ -13,6 +13,7 @@ const state = {
   showRows: true,
   showLetters: true,
   showPreviewGrid: true,
+  previewStyle: 'knots',
   editKnots: false,
   editColors: false,
   customKnots: {},
@@ -55,6 +56,7 @@ function normalizeAll() {
   while (state.colors.length < state.colorCount) state.colors.push(DEFAULT_COLORS[state.colors.length % DEFAULT_COLORS.length]);
   if (state.colors.length > state.colorCount) state.colors = state.colors.slice(0, state.colorCount);
   state.selectedColor = clamp(Number(state.selectedColor)||0, 0, state.colorCount-1);
+  if (!['knots','circles','diamonds'].includes(state.previewStyle)) state.previewStyle = 'knots';
   ensureMotif();
 }
 function ensureMotif() {
@@ -210,7 +212,7 @@ function fillDiamond(ctx,cx,cy,w,h,fill,stroke='rgba(22,31,55,.32)') {
   ctx.restore();
 }
 function renderPreview() {
-  const {width,height,ctx}=setCanvasSize(previewCanvas,160);
+  const {width,height,ctx}=setCanvasSize(previewCanvas,180);
   ctx.clearRect(0,0,width,height);
 
   ctx.fillStyle='#fff';
@@ -240,45 +242,113 @@ function renderPreview() {
   roundRect(ctx,bandX,bandY,bandW,bandH,18);
   ctx.clip();
 
-  // V15 : aperçu fidèle. On dessine un losange par vrai nœud du patron.
   const knots = buildKnotList();
-  const usableX = bandW - 38;
-  const usableY = bandH - 28;
-  const x0 = bandX + 19;
-  const y0 = bandY + 14;
-  const rowStep = state.rows > 1 ? usableY / (state.rows - 1) : usableY;
-  const colStep = state.threads > 1 ? usableX / (state.threads - 1) : usableX;
-  const tileW = clamp(Math.min(colStep * .72, rowStep * .86, 24), 8, 24);
-  const tileH = tileW * 1.12;
+  const rows = Math.max(1,state.rows);
+  const maxKnotsInRow = Math.ceil(state.threads / 2);
 
-  // guides discrets pour bien voir que c’est une miniature du patron
-  ctx.strokeStyle='rgba(93,73,216,.055)';
-  ctx.lineWidth=1;
-  for (let t=0;t<state.threads;t++) {
-    const x=x0 + t*colStep;
+  const tileH = clamp((bandH - 32) / (rows * .62), 14, 32);
+  const tileW = tileH * .92;
+  const xStep = tileW * .86;
+  const yStep = tileH * .62;
+
+  const blockW = (maxKnotsInRow - 1) * xStep + tileW * 1.9;
+  const blockH = (rows - 1) * yStep + tileH * 1.1;
+  const startX = bandX + (bandW - blockW) / 2 + tileW;
+  const startY = bandY + (bandH - blockH) / 2 + tileH / 2;
+
+  function drawPreviewStrands(cx, cy, size, leftColor, rightColor, type) {
+    ctx.save();
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
+    ctx.lineWidth=Math.max(3, size*.34);
+
+    const leftDominant = type === 'f' || type === 'fb';
+    const rightDominant = type === 'b' || type === 'bf';
+
+    ctx.globalAlpha=leftDominant ? .78 : .30;
+    ctx.strokeStyle=leftColor;
     ctx.beginPath();
-    ctx.moveTo(x,bandY+8);
-    ctx.lineTo(x,bandY+bandH-8);
+    ctx.moveTo(cx-size*.95, cy-size*.82);
+    ctx.lineTo(cx+size*.95, cy+size*.82);
+    ctx.stroke();
+
+    ctx.globalAlpha=rightDominant ? .78 : .30;
+    ctx.strokeStyle=rightColor;
+    ctx.beginPath();
+    ctx.moveTo(cx+size*.95, cy-size*.82);
+    ctx.lineTo(cx-size*.95, cy+size*.82);
+    ctx.stroke();
+
+    // petit effet de croisement central
+    ctx.globalAlpha=.18;
+    ctx.strokeStyle='#0f172a';
+    ctx.lineWidth=Math.max(1, size*.10);
+    ctx.beginPath();
+    ctx.arc(cx,cy,size*.72,0,Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawTrueMiniKnot(cx, cy, size, fill, type, leftColor, rightColor) {
+    const symbols={f:'↘',b:'↙',fb:'↘↙',bf:'↙↘'};
+    drawPreviewStrands(cx, cy, size, leftColor, rightColor, type);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx,cy,size,0,Math.PI*2);
+    ctx.fillStyle=fill;
+    ctx.fill();
+    ctx.strokeStyle='rgba(22,31,55,.75)';
+    ctx.lineWidth=Math.max(1.1,size*.11);
+    ctx.stroke();
+
+    // reflet léger
+    ctx.beginPath();
+    ctx.arc(cx-size*.28,cy-size*.32,size*.23,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,.22)';
+    ctx.fill();
+
+    ctx.fillStyle=hexBrightness(fill)<140?'#fff':'#111827';
+    ctx.font=`900 ${Math.max(8, size*.78)}px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif`;
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText(symbols[type]||'↘', cx, cy+0.5);
+    ctx.restore();
+  }
+
+  function drawSimpleCircle(cx, cy, size, fill) {
+    ctx.beginPath();
+    ctx.arc(cx,cy,size,0,Math.PI*2);
+    ctx.fillStyle=fill;
+    ctx.fill();
+    ctx.strokeStyle='rgba(22,31,55,.34)';
+    ctx.lineWidth=1.1;
     ctx.stroke();
   }
 
   knots.forEach(k => {
-    const cx = x0 + (k.left + .5) * colStep;
-    const cy = y0 + k.row * rowStep;
-    const color = knotFill(k.left,k.row);
-    fillDiamond(ctx,cx,cy,tileW,tileH,color,'rgba(22,31,55,.30)');
-  });
+    const rowKnots = [];
+    const start = k.row % 2 === 0 ? 0 : 1;
+    for (let left=start; left < state.threads - 1; left += 2) rowKnots.push(left);
+    const pos = rowKnots.indexOf(k.left);
+    const rowOffset = (k.row % 2) ? xStep * .50 : 0;
+    const cx = startX + pos * xStep + rowOffset;
+    const cy = startY + k.row * yStep;
 
-  // lignes lumineuses très légères pour l’effet bracelet
-  for (let i=0;i<4;i++) {
-    const yy=bandY+18+i*(bandH-36)/3;
-    ctx.strokeStyle='rgba(255,255,255,.22)';
-    ctx.lineWidth=1;
-    ctx.beginPath();
-    ctx.moveTo(bandX+18,yy);
-    ctx.lineTo(bandX+bandW-18,yy);
-    ctx.stroke();
-  }
+    const fill = knotFill(k.left,k.row);
+    const type = knotType(k.row,k.left);
+    const leftColor = threadColor(k.left,k.row);
+    const rightColor = threadColor(k.right,k.row);
+    const size = tileH * .43;
+
+    if (state.previewStyle === 'circles') {
+      drawSimpleCircle(cx,cy,size,fill);
+    } else if (state.previewStyle === 'diamonds') {
+      fillDiamond(ctx,cx,cy,tileW,tileH,fill,'rgba(22,31,55,.32)');
+    } else {
+      drawTrueMiniKnot(cx,cy,size,fill,type,leftColor,rightColor);
+    }
+  });
 
   ctx.restore();
 
@@ -287,10 +357,10 @@ function renderPreview() {
   ctx.lineWidth=1.1;
   ctx.stroke();
 
-  // petit compteur discret
+  const label = state.previewStyle === 'circles' ? 'ronds' : (state.previewStyle === 'diamonds' ? 'losanges' : 'mini-nœuds');
   ctx.fillStyle='rgba(23,32,51,.62)';
   ctx.font='700 12px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
-  ctx.fillText(`${knots.length} losanges = ${knots.length} nœuds`, bandX + 14, bandY + bandH - 12);
+  ctx.fillText(`${knots.length} ${label} = ${knots.length} nœuds`, bandX + 14, bandY + bandH - 12);
 }
 
 function renderMotifEditor() {
@@ -398,7 +468,7 @@ function renderPattern() {
       drawNode(x,y,knotFill(left,r),type,idx++);
     }
   }
-  svgText(svg,'Version 15 · Aperçu fidèle au patron · Créé avec Calie',marginL,contentH-42,'footer-note');
+  svgText(svg,'Version 18 · Vrais mini-nœuds · Créé avec Calie',marginL,contentH-42,'footer-note');
 }
 function onKnotClick(idx) {
   const knots = buildKnotList();
@@ -486,6 +556,7 @@ function renderInfo() {
   $('#showRows').checked=state.showRows;
   $('#showLetters').checked=state.showLetters;
   $('#showPreviewGrid').checked=state.showPreviewGrid;
+  const pss=$('#previewStyleSelect'); if (pss) pss.value = state.previewStyle;
   document.querySelectorAll('.typeBtn').forEach(btn=>btn.classList.toggle('active',btn.dataset.type===state.type));
   $('#summaryLabel').innerHTML=`${state.type==='alpha'?'Alpha':'Normal'} · <b>${state.threads} fils</b> · motif ${state.motifWidth}×${state.motifHeight} · ${state.colorCount} couleurs`;
   $('#modeBadge').textContent=state.editColors?'Mode édition des couleurs':(state.editKnots?'Mode édition des flèches':(state.weave?'Mode tissage actif':'Mode normal'));
@@ -512,7 +583,7 @@ function renderAll() {
 }
 function exportPreviewPng() {
   const link=document.createElement('a');
-  link.download='bracelet-studio-by-calie-v15.png';
+  link.download='bracelet-studio-by-calie-v18.png';
   link.href=previewCanvas.toDataURL('image/png');
   link.click();
 }
@@ -536,6 +607,7 @@ function bindUI() {
   $('#showRows').onchange=e=>{state.showRows=e.target.checked;renderAll();};
   $('#showLetters').onchange=e=>{state.showLetters=e.target.checked;renderAll();};
   $('#showPreviewGrid').onchange=e=>{state.showPreviewGrid=e.target.checked;renderAll();};
+  const pss=$('#previewStyleSelect'); if (pss) pss.onchange=e=>{state.previewStyle=e.target.value; renderAll();};
   $('#newBtn').onclick=()=>{if(confirm('Créer un nouveau motif ?')){setPreset('diamond');}};
   $('#saveBtn').onclick=()=>{saveState();alert('Projet sauvegardé sur cet iPad / navigateur.');};
   $('#exportBtn').onclick=exportPreviewPng;
