@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'braceletStudioByCalieV28';
+const STORAGE_KEY = 'braceletStudioByCalieV29';
 const DEFAULT_COLORS = ['#A8D8F0','#3D5CB3','#EF0B0B','#90EAAE','#FFFFFF','#26408B','#F6C9D9','#7FC8B7','#111827','#F4E8B2','#7A4CBC','#13A4C8'];
 
 const state = {
@@ -239,6 +239,29 @@ function diamondPresetColor(c,r,w=state.motifWidth,h=state.motifHeight) {
   return 3 % state.colorCount;
 }
 function setPreset(kind) {
+  // V29 : les motifs rapides pilotent maintenant la vraie base :
+  // couleurs de fils + flèches du patron.
+  normalizeAll();
+
+  state.customKnots = {};
+  state.customColors = {};
+
+  // 1) Couleurs de départ des fils
+  state.threadColors = [];
+  for (let i=0; i<state.threads; i++) {
+    if (kind === 'clear') {
+      state.threadColors[i] = 0;
+    } else if (kind === 'checker') {
+      state.threadColors[i] = i % Math.min(2, state.colorCount);
+    } else if (kind === 'stripe') {
+      state.threadColors[i] = i % state.colorCount;
+    } else {
+      // Diamants : couleurs miroir de chaque côté.
+      state.threadColors[i] = Math.min(i, state.threads - 1 - i) % state.colorCount;
+    }
+  }
+
+  // 2) Ancien motif interne gardé cohérent, même s'il n'est plus l'éditeur principal.
   for (let r=0;r<state.motifHeight;r++) {
     for (let c=0;c<state.motifWidth;c++) {
       if (kind === 'clear') state.motif[r][c] = 0;
@@ -247,8 +270,37 @@ function setPreset(kind) {
       else state.motif[r][c] = diamondPresetColor(c,r);
     }
   }
-  state.customKnots = {};
-  state.customColors = {};
+
+  // 3) Flèches du patron
+  if (kind !== 'clear') {
+    for (let r=0; r<state.rows; r++) {
+      const start = r % 2 === 0 ? 0 : 1;
+      for (let left=start; left < state.threads - 1; left += 2) {
+        const key = knotKey(r,left);
+
+        if (kind === 'stripe') {
+          // Rayures : le fil avance toujours dans le même sens.
+          state.customKnots[key] = 'f';
+        } else if (kind === 'checker') {
+          // Damier : alternance très visible de sens.
+          const order = ['f','b','fb','bf'];
+          state.customKnots[key] = order[(r + left) % order.length];
+        } else {
+          // Diamants : les fils vont vers le centre puis repartent.
+          const center = (state.threads - 1) / 2;
+          const knotCenter = left + .5;
+          state.customKnots[key] = knotCenter < center ? 'f' : 'b';
+
+          // Petits retours sur certaines rangées pour casser l'effet trop plat.
+          if ((r % 4) === 2 && Math.abs(knotCenter - center) <= 1.5) {
+            state.customKnots[key] = knotCenter < center ? 'fb' : 'bf';
+          }
+        }
+      }
+    }
+  }
+
+  threadRowsCache = null;
   resetWeave();
   renderAll();
 }
@@ -743,7 +795,7 @@ function renderPattern() {
       drawNode(x,y,visual.fill,type,idx++);
     }
   }
-  svgText(svg,'Version 28 · Interface simplifiée · Créé avec Calie',marginL,contentH-42,'footer-note');
+  svgText(svg,'Version 29 · Motifs rapides corrigés · Créé avec Calie',marginL,contentH-42,'footer-note');
 }
 function onKnotClick(idx) {
   const knots = buildKnotList();
@@ -908,7 +960,7 @@ function renderAll() {
 }
 function exportPreviewPng() {
   const link=document.createElement('a');
-  link.download='bracelet-studio-by-calie-v28.png';
+  link.download='bracelet-studio-by-calie-v29.png';
   link.href=previewCanvas.toDataURL('image/png');
   link.click();
 }

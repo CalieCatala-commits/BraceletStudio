@@ -530,3 +530,8 @@ label{display:block;margin:11px 0 7px;font-weight:700;font-size:14px}
 .toolbar{
   align-items:center;
 }
+
+/* V29 : motifs rapides corrigés */
+.quick-grid button{
+  font-weight:850;
+}
