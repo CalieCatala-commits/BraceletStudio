@@ -6,15 +6,15 @@
   <meta name="theme-color" content="#4f46e5" />
   <title>Bracelet Studio by Calie</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=4" />
 </head>
 <body>
-  <header class="topbar">
+  <header class="appbar">
     <div class="brand">
-      <div class="logo">✕</div>
-      <div><strong>BRACELET STUDIO</strong><span>by Calie</span></div>
+      <div class="logo" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div><b>Bracelet Studio</b><small>by Calie</small></div>
     </div>
-    <nav>
+    <nav class="actions">
       <button id="newBtn">Nouveau</button>
       <button id="saveBtn">Enregistrer</button>
       <button id="exportBtn">Exporter PNG</button>
@@ -22,72 +22,86 @@
     </nav>
   </header>
 
-  <main class="app">
-    <aside class="panel">
-      <section class="card">
+  <main class="layout">
+    <aside class="panel settings">
+      <section>
         <h2>Paramètres</h2>
         <label>Type de bracelet</label>
-        <select id="type">
-          <option value="normal">Normal</option>
-          <option value="alpha">Alpha</option>
-        </select>
+        <div class="segmented" role="group">
+          <button class="active" data-type="normal">Normal</button>
+          <button data-type="alpha">Alpha</button>
+        </div>
 
         <label>Nombre de fils</label>
-        <div class="stepper"><button id="minus">−</button><strong id="threadCount">12</strong><button id="plus">+</button></div>
+        <div class="stepper">
+          <button id="minusThreads">−</button><strong id="threadsValue">12</strong><button id="plusThreads">+</button>
+        </div>
 
         <label>Nombre de rangées</label>
-        <input id="rows" type="number" min="4" max="60" value="12" />
+        <input id="rowsInput" type="number" min="4" max="80" value="14" />
 
         <label>Motif</label>
-        <select id="pattern">
+        <select id="patternSelect">
           <option value="diamonds">Diamants</option>
           <option value="chevrons">Chevrons</option>
-          <option value="waves">Vagues</option>
+          <option value="stripes">Rayures</option>
           <option value="hearts">Cœurs</option>
-          <option value="alphaName">Alpha prénom</option>
         </select>
-
-        <div id="alphaBox" class="hidden">
-          <label>Texte Alpha</label>
-          <input id="alphaText" value="CALIE" maxlength="12" />
-        </div>
       </section>
 
-      <section class="card">
+      <section>
         <h2>Couleurs des fils</h2>
         <div id="palette" class="palette"></div>
-        <input id="colorPicker" type="color" class="hidden" />
+        <input id="colorPicker" type="color" hidden />
         <p class="hint">Touche une couleur pour la modifier.</p>
       </section>
 
-      <section class="card">
+      <section>
         <h2>Options</h2>
-        <label class="check"><input id="showRows" type="checkbox" checked> Afficher les rangées</label>
-        <label class="check"><input id="showLetters" type="checkbox" checked> Afficher les lettres</label>
-        <label class="check"><input id="realistic" type="checkbox" checked> Aperçu réaliste</label>
-        <button id="resetProgress">Réinitialiser tissage</button>
+        <label class="check"><input id="showRows" type="checkbox" checked /> Afficher les numéros</label>
+        <label class="check"><input id="showLetters" type="checkbox" checked /> Afficher les lettres</label>
+        <label class="check"><input id="wideMode" type="checkbox" /> Grille large iPad</label>
+      </section>
+
+      <section class="about">
+        <h2>À propos</h2>
+        <p><b>Bracelet Studio by Calie</b><br>Créé par Calie ❤️<br><span>Version 4 — vraie base graphique</span></p>
       </section>
     </aside>
 
     <section class="workspace">
-      <div class="card preview-card">
-        <h2>Aperçu du bracelet</h2>
-        <canvas id="braceletPreview" height="84"></canvas>
-      </div>
+      <section class="panel previewPanel">
+        <div class="sectionTitle"><h2>Aperçu du bracelet</h2><span id="statusText">Normal · Diamants</span></div>
+        <canvas id="braceletCanvas" height="96"></canvas>
+      </section>
 
-      <div class="card pattern-card">
-        <div class="pattern-head">
-          <div><h2>Patron de nœuds</h2><p>Sur iPad : glisse avec le doigt, pince pour zoomer.</p></div>
-          <div class="legend"><span>↘ avant</span><span>↙ arrière</span><span>↘↙ av-arr</span><span>↙↘ arr-av</span></div>
+      <section class="panel patternPanel">
+        <div class="sectionTitle"><h2>Patron de nœuds</h2><span>Glisse avec le doigt pour te déplacer. Pince pour zoomer.</span></div>
+        <div id="patternScroller" class="patternScroller">
+          <svg id="patternSvg" xmlns="http://www.w3.org/2000/svg"></svg>
         </div>
-        <div id="patternWrap" class="pattern-wrap">
-          <svg id="patternSvg"></svg>
-        </div>
-      </div>
+      </section>
     </section>
+
+    <aside class="panel rightPanel">
+      <section>
+        <h2>Légende</h2>
+        <div class="legendItem"><span>↘</span><p>Nœud avant<br><small>gauche vers droite</small></p></div>
+        <div class="legendItem"><span>↙</span><p>Nœud arrière<br><small>droite vers gauche</small></p></div>
+        <div class="legendItem"><span>↘↙</span><p>Avant-arrière</p></div>
+        <div class="legendItem"><span>↙↘</span><p>Arrière-avant</p></div>
+      </section>
+      <section>
+        <h2>Informations</h2>
+        <p id="infoBox"></p>
+      </section>
+      <section class="tip">
+        <h2>Astuce</h2>
+        <p>Le mode tissage met en évidence le prochain nœud. Touche les nœuds au fur et à mesure.</p>
+      </section>
+    </aside>
   </main>
 
-  <footer>Bracelet Studio by Calie ❤️ — version 0.3</footer>
-  <script src="script.js"></script>
+  <script src="script.js?v=4"></script>
 </body>
 </html>
