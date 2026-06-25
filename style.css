@@ -298,3 +298,27 @@ label{display:block;margin:11px 0 7px;font-weight:700;font-size:14px}
 .center-column{
   grid-template-rows:auto 1fr;
 }
+
+/* V20 : légende et patron avec symboles inspirés du schéma des nœuds brésiliens */
+.knot-icon-card{
+  width:70px;
+  height:70px;
+  border-radius:12px;
+  overflow:hidden;
+  flex:0 0 70px;
+  border:1px solid #f0d3d3;
+  background:#fff;
+}
+.legend-item{
+  grid-template-columns:70px 1fr;
+}
+.legend-item p{
+  font-size:13px;
+}
+.node .knot-glyph line,
+.node .knot-glyph path{
+  stroke:#111827;
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}

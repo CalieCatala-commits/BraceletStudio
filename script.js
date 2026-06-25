@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'braceletStudioByCalieV19';
+const STORAGE_KEY = 'braceletStudioByCalieV20';
 const DEFAULT_COLORS = ['#A8D8F0','#3D5CB3','#EF0B0B','#90EAAE','#FFFFFF','#26408B','#F6C9D9','#7FC8B7','#111827','#F4E8B2','#7A4CBC','#13A4C8'];
 
 const state = {
@@ -401,6 +401,55 @@ function svgLine(parent,x1,y1,x2,y2,cls,stroke,width) {
   l.setAttribute('x1',x1); l.setAttribute('y1',y1); l.setAttribute('x2',x2); l.setAttribute('y2',y2);
   l.setAttribute('class',cls); l.setAttribute('stroke',stroke); l.setAttribute('stroke-width',width); parent.appendChild(l);
 }
+function arrowHeadPoints(x1,y1,x2,y2,headLen,headWidth) {
+  const len = Math.hypot(x2-x1, y2-y1) || 1;
+  const ux = (x2-x1)/len, uy = (y2-y1)/len;
+  return [
+    [x2 - ux*headLen - uy*headWidth, y2 - uy*headLen + ux*headWidth],
+    [x2, y2],
+    [x2 - ux*headLen + uy*headWidth, y2 - uy*headLen - ux*headWidth]
+  ];
+}
+function arrowMarkup(x1,y1,x2,y2,stroke,width) {
+  const pts = arrowHeadPoints(x1,y1,x2,y2,width*2.4,width*1.65);
+  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${stroke}" stroke-width="${width}" stroke-linecap="round" />
+          <path d="M ${pts[0][0]} ${pts[0][1]} L ${pts[1][0]} ${pts[1][1]} L ${pts[2][0]} ${pts[2][1]}" stroke="${stroke}" stroke-width="${width}" fill="none" stroke-linecap="round" stroke-linejoin="round" />`;
+}
+function polylineArrowMarkup(points, stroke, width) {
+  const d = points.map((p, i) => `${i===0 ? 'M' : 'L'} ${p[0]} ${p[1]}`).join(' ');
+  const p1 = points[points.length-2], p2 = points[points.length-1];
+  const head = arrowHeadPoints(p1[0], p1[1], p2[0], p2[1], width*2.2, width*1.55);
+  return `<path d="${d}" stroke="${stroke}" stroke-width="${width}" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M ${head[0][0]} ${head[0][1]} L ${head[1][0]} ${head[1][1]} L ${head[2][0]} ${head[2][1]}" stroke="${stroke}" stroke-width="${width}" fill="none" stroke-linecap="round" stroke-linejoin="round" />`;
+}
+function knotGlyphMarkup(type, x, y, size, stroke='#111827', width=3.1) {
+  switch(type) {
+    case 'f':
+      return arrowMarkup(x-size*.42, y-size*.42, x+size*.34, y+size*.34, stroke, width);
+    case 'b':
+      return arrowMarkup(x+size*.42, y-size*.42, x-size*.34, y+size*.34, stroke, width);
+    case 'fb':
+      return polylineArrowMarkup([[x+size*.34, y-size*.40], [x-size*.02, y], [x-size*.34, y+size*.38]], stroke, width);
+    case 'bf':
+      return polylineArrowMarkup([[x-size*.34, y-size*.40], [x+size*.02, y], [x+size*.34, y+size*.38]], stroke, width);
+    default:
+      return arrowMarkup(x-size*.42, y-size*.42, x+size*.34, y+size*.34, stroke, width);
+  }
+}
+function knotCardMarkup(type) {
+  return `<svg viewBox="0 0 96 96" width="70" height="70" aria-hidden="true">
+    <rect x="3" y="3" width="90" height="90" rx="0" fill="#fff" stroke="#ef4444" stroke-width="6"/>
+    <line x1="9" y1="9" x2="87" y2="87" stroke="#b8d93a" stroke-width="11" stroke-linecap="round"/>
+    <line x1="87" y1="9" x2="9" y2="87" stroke="#b4001c" stroke-width="11" stroke-linecap="round"/>
+    <circle cx="48" cy="48" r="18" fill="#b8d93a" stroke="#111827" stroke-width="2.5"/>
+    <g>${knotGlyphMarkup(type, 48, 48, 18, '#111827', 3.2)}</g>
+  </svg>`;
+}
+function renderLegendIcons() {
+  document.querySelectorAll('.knot-icon-card').forEach(el => {
+    el.innerHTML = knotCardMarkup(el.dataset.knot || 'f');
+  });
+}
 function drawNode(x,y,fill,type,idx) {
   const g=document.createElementNS('http://www.w3.org/2000/svg','g');
   g.setAttribute('class','node');
@@ -469,7 +518,7 @@ function renderPattern() {
       drawNode(x,y,knotFill(left,r),type,idx++);
     }
   }
-  svgText(svg,'Version 19 · Interface allégée · Créé avec Calie',marginL,contentH-42,'footer-note');
+  svgText(svg,'Version 20 · Nœuds brésiliens · Créé avec Calie',marginL,contentH-42,'footer-note');
 }
 function onKnotClick(idx) {
   const knots = buildKnotList();
@@ -504,12 +553,14 @@ function renderCurrentKnotPreview() {
   const k=currentKnotMeta();
   const fill=knotFill(k.left,k.row);
   const leftColor=threadColor(k.left,k.row), rightColor=threadColor(k.right,k.row);
-  const symbol={f:'↘',b:'↙',fb:'↘↙',bf:'↙↘'}[k.type]||'↘';
+  const mainLeft = k.type==='f' || k.type==='fb';
+  const mainRight = k.type==='b' || k.type==='bf';
   currentKnotPreview.innerHTML=`
-    <line x1="35" y1="20" x2="125" y2="118" stroke="${leftColor}" stroke-width="16" stroke-linecap="round" opacity="${k.type==='f'||k.type==='fb'?'1':'.45'}" />
-    <line x1="125" y1="20" x2="35" y2="118" stroke="${rightColor}" stroke-width="16" stroke-linecap="round" opacity="${k.type==='b'||k.type==='bf'?'1':'.45'}" />
-    <circle cx="80" cy="70" r="30" fill="${fill}" stroke="#1f2a44" stroke-width="2" />
-    <text x="80" y="72" text-anchor="middle" dominant-baseline="middle" font-size="28" font-weight="900" fill="${hexBrightness(fill)<140?'#fff':'#101625'}">${symbol}</text>
+    <rect x="8" y="8" width="144" height="124" rx="14" fill="#ffffff" stroke="#ef4444" stroke-width="4" />
+    <line x1="28" y1="20" x2="132" y2="120" stroke="${leftColor}" stroke-width="15" stroke-linecap="round" opacity="${mainLeft?'1':'.42'}" />
+    <line x1="132" y1="20" x2="28" y2="120" stroke="${rightColor}" stroke-width="15" stroke-linecap="round" opacity="${mainRight?'1':'.42'}" />
+    <circle cx="80" cy="70" r="30" fill="${fill}" stroke="#1f2a44" stroke-width="2.5" />
+    <g>${knotGlyphMarkup(k.type, 80, 70, 23, hexBrightness(fill)<140 ? '#ffffff' : '#111827', 4)}</g>
   `;
   $('#currentKnotText').textContent=state.editColors ? `Mode couleurs : choisis une couleur puis touche les cercles du patron.` : (state.editKnots ? `Mode flèches : touche un cercle pour changer sa flèche.` : `Fais le nœud entre ${letter(k.left)} et ${letter(k.right)}, rangée ${k.row+1}.`);
 }
@@ -582,11 +633,11 @@ function renderAll() {
   const max=totalKnots();
   state.done=new Set([...state.done].filter(v=>v>=0&&v<max));
   state.next=clamp(state.next,0,max);
-  renderPalette(); renderInfo(); renderPreview(); renderMotifEditor(); renderPattern(); renderCurrentKnotPreview(); saveState();
+  renderPalette(); renderInfo(); renderPreview(); renderMotifEditor(); renderPattern(); renderCurrentKnotPreview(); renderLegendIcons(); saveState();
 }
 function exportPreviewPng() {
   const link=document.createElement('a');
-  link.download='bracelet-studio-by-calie-v19.png';
+  link.download='bracelet-studio-by-calie-v20.png';
   link.href=previewCanvas.toDataURL('image/png');
   link.click();
 }
