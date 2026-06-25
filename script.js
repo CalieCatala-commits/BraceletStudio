@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'braceletStudioByCalieV27';
+const STORAGE_KEY = 'braceletStudioByCalieV28';
 const DEFAULT_COLORS = ['#A8D8F0','#3D5CB3','#EF0B0B','#90EAAE','#FFFFFF','#26408B','#F6C9D9','#7FC8B7','#111827','#F4E8B2','#7A4CBC','#13A4C8'];
 
 const state = {
@@ -52,6 +52,7 @@ function loadState() {
 }
 function normalizeAll() {
   state.type = 'normal';
+  state.editColors = false;
   state.threads = clamp(Number(state.threads)||9, 3, 40);
   state.rows = clamp(Number(state.rows)||18, 4, 90);
   state.motifWidth = clamp(Number(state.motifWidth)||14, 4, 40);
@@ -742,7 +743,7 @@ function renderPattern() {
       drawNode(x,y,visual.fill,type,idx++);
     }
   }
-  svgText(svg,'Version 27 · Mise en page claire · Créé avec Calie',marginL,contentH-42,'footer-note');
+  svgText(svg,'Version 28 · Interface simplifiée · Créé avec Calie',marginL,contentH-42,'footer-note');
 }
 function onKnotClick(idx) {
   const knots = buildKnotList();
@@ -786,11 +787,9 @@ function renderCurrentKnotPreview() {
     <circle cx="80" cy="70" r="30" fill="${fill}" stroke="#1f2a44" stroke-width="2.5" />
     <g>${knotGlyphMarkup(k.type, 80, 70, 23, hexBrightness(fill)<140 ? '#ffffff' : '#111827', 4)}</g>
   `;
-  $('#currentKnotText').textContent=state.editColors
-    ? `Mode couleurs : choisis une couleur puis touche un cercle. La flèche s’adapte et le changement se propage.`
-    : (state.editKnots
-      ? `Mode flèches : touche un cercle. Les nœuds de retour reviennent du bon côté et les couleurs se propagent.`
-      : `Fais le nœud entre ${letter(k.left)} et ${letter(k.right)}, rangée ${k.row+1}.`);
+  $('#currentKnotText').textContent=state.editKnots
+    ? `Mode flèches : touche un cercle. Les nœuds de retour reviennent du bon côté et les couleurs se propagent.`
+    : `Fais le nœud entre ${letter(k.left)} et ${letter(k.right)}, rangée ${k.row+1}.`;
 }
 function renderPalette() {
   normalizeAll();
@@ -885,7 +884,11 @@ function renderInfo() {
     infoBox.innerHTML=`Type : <b>${state.type==='alpha'?'Alpha':'Normal'}</b><br>Fils : <b>${state.threads}</b> ${state.threads%2?'· impair':'· pair'}<br>Rangées : <b>${state.rows}</b><br>Motif : <b>${state.motifWidth}×${state.motifHeight}</b><br>Couleurs : <b>${state.colorCount}</b><br>Nœuds : <b>${totalKnots()}</b><br>Flèches modifiées : <b>${Object.keys(state.customKnots||{}).length}</b><br>Couleurs modifiées sur le patron : <b>${Object.keys(state.customColors||{}).length}</b><br>Propagation : <b>active</b>`;
   }
   const editBtn=$('#editKnotsToggle'); if(editBtn){editBtn.classList.toggle('active',state.editKnots); editBtn.textContent=state.editKnots?'Édition flèches active':'Modifier les flèches';}
-  const colorEditBtn=$('#editColorsToggle'); if(colorEditBtn){colorEditBtn.classList.toggle('active',state.editColors); colorEditBtn.textContent=state.editColors?'Édition couleurs active':'Modifier les couleurs';}
+  const colorEditBtn=$('#editColorsToggle');
+  if(colorEditBtn){
+    colorEditBtn.classList.toggle('active',state.editColors);
+    colorEditBtn.textContent=state.editColors?'Édition couleurs active':'Modifier les couleurs';
+  }
   const total=totalKnots();
   state.next=clamp(state.next,0,total);
   const pct=total?Math.round((state.done.size/total)*100):0;
@@ -905,7 +908,7 @@ function renderAll() {
 }
 function exportPreviewPng() {
   const link=document.createElement('a');
-  link.download='bracelet-studio-by-calie-v27.png';
+  link.download='bracelet-studio-by-calie-v28.png';
   link.href=previewCanvas.toDataURL('image/png');
   link.click();
 }
@@ -941,8 +944,11 @@ function bindUI() {
   $('#newBtn').onclick=()=>{if(confirm('Créer un nouveau motif ?')){setPreset('diamond');}};
   $('#saveBtn').onclick=()=>{saveState();alert('Projet sauvegardé sur cet iPad / navigateur.');};
   $('#exportBtn').onclick=exportPreviewPng;
-  $('#editColorsToggle').onclick=()=>{state.editColors=!state.editColors;if(state.editColors)state.editKnots=false;renderAll();};
-  $('#editKnotsToggle').onclick=()=>{state.editKnots=!state.editKnots;if(state.editKnots)state.editColors=false;renderAll();};
+  const editColorsToggle=$('#editColorsToggle');
+  if (editColorsToggle) {
+    editColorsToggle.onclick=()=>{state.editColors=!state.editColors;if(state.editColors)state.editKnots=false;renderAll();};
+  }
+  $('#editKnotsToggle').onclick=()=>{state.editKnots=!state.editKnots;state.editColors=false;renderAll();};
   $('#weaveToggle').onclick=()=>{state.weave=!state.weave;if(state.weave){state.editKnots=false;state.editColors=false;}renderAll();};
   $('#prevKnotBtn').onclick=()=>{if(state.next<=0)return;state.next=clamp(state.next-1,0,totalKnots()-1);state.done.delete(state.next);renderAll();};
   $('#nextKnotBtn').onclick=()=>{if(state.next>=totalKnots())return;state.done.add(state.next);state.next=clamp(state.next+1,0,totalKnots());renderAll();};

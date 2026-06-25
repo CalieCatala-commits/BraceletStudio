@@ -525,3 +525,8 @@ label{display:block;margin:11px 0 7px;font-weight:700;font-size:14px}
   .app-grid{grid-template-columns:1fr}
   .sidepanel-right{grid-column:auto}
 }
+
+/* V28 : bouton Modifier les couleurs retiré */
+.toolbar{
+  align-items:center;
+}
