@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'braceletStudioByCalieV20';
+const STORAGE_KEY = 'braceletStudioByCalieV23';
 const DEFAULT_COLORS = ['#A8D8F0','#3D5CB3','#EF0B0B','#90EAAE','#FFFFFF','#26408B','#F6C9D9','#7FC8B7','#111827','#F4E8B2','#7A4CBC','#13A4C8'];
 
 const state = {
@@ -24,6 +24,8 @@ const state = {
   done: new Set(),
   motif: []
 };
+
+let threadRowsCache = null;
 
 const $ = (s) => document.querySelector(s);
 const svg = $('#patternSvg');
@@ -88,12 +90,125 @@ function colorAtMotif(col,row) {
   const c = ((Math.floor(col) % state.motifWidth) + state.motifWidth) % state.motifWidth;
   return state.motif[r][c] % state.colors.length;
 }
+function isLeftDominant(type) {
+  return type === 'f' || type === 'fb';
+}
+function isSwapFamily(type) {
+  return type === 'f' || type === 'b';
+}
+function initialThreadIndexes() {
+  const arr = [];
+  for (let i=0; i<state.threads; i++) arr.push(colorAtMotif(i,0) % state.colors.length);
+  return arr;
+}
+function applyKnotToThreadRow(before, row, left) {
+  const type = knotType(row,left);
+  const key = customColorKey(row,left);
+  const leftIn = before[left] % state.colors.length;
+  const rightIn = before[left+1] % state.colors.length;
+  const dominant = state.customColors && state.customColors[key] !== undefined
+    ? state.customColors[key] % state.colors.length
+    : (isLeftDominant(type) ? leftIn : rightIn);
+
+  let leftOut = leftIn;
+  let rightOut = rightIn;
+
+  // Nœuds classiques : le fil dominant peut changer de position.
+  // f / b déplacent le fil dominant de l'autre côté.
+  // fb / bf le ramènent du même côté.
+  if (type === 'f') {
+    leftOut = rightIn;
+    rightOut = dominant;
+  } else if (type === 'b') {
+    leftOut = dominant;
+    rightOut = leftIn;
+  } else if (type === 'fb') {
+    leftOut = dominant;
+    rightOut = rightIn;
+  } else if (type === 'bf') {
+    leftOut = leftIn;
+    rightOut = dominant;
+  }
+
+  return { type, leftIn, rightIn, dominant, leftOut, rightOut };
+}
+function buildThreadRows() {
+  if (threadRowsCache) return threadRowsCache;
+
+  const rows = [];
+  let current = initialThreadIndexes();
+  rows[0] = current.slice();
+
+  for (let r=0; r<state.rows; r++) {
+    const before = current.slice();
+    rows[r] = before.slice();
+    const after = before.slice();
+    const start = r % 2 === 0 ? 0 : 1;
+
+    for (let left=start; left < state.threads - 1; left += 2) {
+      const result = applyKnotToThreadRow(before, r, left);
+      after[left] = result.leftOut;
+      after[left+1] = result.rightOut;
+    }
+
+    current = after;
+    rows[r+1] = current.slice();
+  }
+
+  threadRowsCache = rows;
+  return rows;
+}
+function threadColorIndex(threadIndex,row=0) {
+  const rows = buildThreadRows();
+  const safeRow = clamp(row, 0, rows.length - 1);
+  const arr = rows[safeRow] || initialThreadIndexes();
+  return (arr[threadIndex] ?? colorAtMotif(threadIndex,0)) % state.colors.length;
+}
 function threadColor(threadIndex,row=0) {
-  return state.colors[colorAtMotif(threadIndex,row)];
+  return state.colors[threadColorIndex(threadIndex,row)];
+}
+function localThreadColorIndex(threadIndex,row=0) {
+  return threadColorIndex(threadIndex,row);
+}
+function knotColorIndexByType(row,left,type=knotType(row,left)) {
+  const key = customColorKey(row,left);
+  if (state.customColors && state.customColors[key] !== undefined) {
+    return state.customColors[key] % state.colors.length;
+  }
+  const rows = buildThreadRows();
+  const arr = rows[row] || initialThreadIndexes();
+  return isLeftDominant(type) ? (arr[left] % state.colors.length) : (arr[left+1] % state.colors.length);
+}
+function knotVisual(row,left,type=knotType(row,left)) {
+  const rows = buildThreadRows();
+  const arr = rows[row] || initialThreadIndexes();
+
+  const leftBase = (arr[left] ?? colorAtMotif(left,0)) % state.colors.length;
+  const rightBase = (arr[left+1] ?? colorAtMotif(left+1,0)) % state.colors.length;
+  const dominant = knotColorIndexByType(row,left,type);
+
+  const leftIndex = isLeftDominant(type) ? dominant : leftBase;
+  const rightIndex = isLeftDominant(type) ? rightBase : dominant;
+  const result = applyKnotToThreadRow(arr, row, left);
+
+  return {
+    type,
+    fillIndex: dominant,
+    fill: state.colors[dominant],
+    leftIndex,
+    rightIndex,
+    leftColor: state.colors[leftIndex],
+    rightColor: state.colors[rightIndex],
+    leftBase,
+    rightBase,
+    leftOut: result.leftOut,
+    rightOut: result.rightOut
+  };
 }
 function knotFill(left,row) {
-  return state.colors[nodeColorIndex(row,left)];
+  return knotVisual(row,left).fill;
 }
+
 function diamondPresetColor(c,r,w=state.motifWidth,h=state.motifHeight) {
   const midX=(w-1)/2, midY=(h-1)/2;
   const d=Math.abs(c-midX)+Math.abs(r-midY)*1.35;
@@ -143,7 +258,31 @@ function nodeColorIndex(row,left) {
   return colorAtMotif(left + .5, row);
 }
 function setNodeColor(row,left,colorIndex) {
-  state.customColors[customColorKey(row,left)] = colorIndex % state.colors.length;
+  const nextColor = colorIndex % state.colors.length;
+  const key = customColorKey(row,left);
+  const currentType = knotType(row,left);
+  const swap = isSwapFamily(currentType);
+  const rows = buildThreadRows();
+  const arr = rows[row] || initialThreadIndexes();
+  const leftBase = arr[left] % state.colors.length;
+  const rightBase = arr[left+1] % state.colors.length;
+
+  state.customColors[key] = nextColor;
+
+  // Couleur -> flèche :
+  // si la couleur choisie correspond au fil gauche/droit ACTUEL,
+  // on choisit la famille de flèche cohérente.
+  if (nextColor === leftBase) {
+    state.customKnots[knotKey(row,left)] = swap ? 'f' : 'fb';
+  } else if (nextColor === rightBase) {
+    state.customKnots[knotKey(row,left)] = swap ? 'b' : 'bf';
+  } else {
+    state.customKnots[knotKey(row,left)] = swap
+      ? (isLeftDominant(currentType) ? 'b' : 'f')
+      : (isLeftDominant(currentType) ? 'bf' : 'fb');
+  }
+
+  threadRowsCache = null;
 }
 function autoKnotType(row,left) {
   const a=colorAtMotif(left,row);
@@ -164,7 +303,14 @@ function cycleKnotType(row,left) {
   const key = knotKey(row,left);
   const current = knotType(row,left);
   const next = order[(order.indexOf(current) + 1) % order.length];
+
   state.customKnots[key] = next;
+
+  // Flèche -> couleur :
+  // en changeant le sens, la couleur forcée est retirée.
+  // Le nœud reprend donc la couleur du fil dominant propagé.
+  delete state.customColors[customColorKey(row,left)];
+  threadRowsCache = null;
 }
 function cleanCustomEdits() {
   const valid = new Set(buildKnotList().map(k => knotKey(k.row,k.left)));
@@ -260,26 +406,34 @@ function renderPreview() {
     ctx.save();
     ctx.lineCap='round';
     ctx.lineJoin='round';
-    ctx.lineWidth=Math.max(3, size*.34);
 
     const leftDominant = type === 'f' || type === 'fb';
     const rightDominant = type === 'b' || type === 'bf';
 
-    ctx.globalAlpha=leftDominant ? .78 : .30;
-    ctx.strokeStyle=leftColor;
-    ctx.beginPath();
-    ctx.moveTo(cx-size*.95, cy-size*.82);
-    ctx.lineTo(cx+size*.95, cy+size*.82);
-    ctx.stroke();
+    function strokePath(points, color, width, alpha) {
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      ctx.moveTo(points[0][0], points[0][1]);
+      for (let i=1;i<points.length;i++) ctx.lineTo(points[i][0], points[i][1]);
+      ctx.stroke();
+    }
 
-    ctx.globalAlpha=rightDominant ? .78 : .30;
-    ctx.strokeStyle=rightColor;
-    ctx.beginPath();
-    ctx.moveTo(cx+size*.95, cy-size*.82);
-    ctx.lineTo(cx-size*.95, cy+size*.82);
-    ctx.stroke();
+    const thick = Math.max(3, size*.34);
+    const thin = Math.max(2, size*.24);
 
-    // petit effet de croisement central
+    if (type === 'fb') {
+      strokePath([[cx-size*.95,cy-size*.82],[cx,cy],[cx-size*.95,cy+size*.82]], leftColor, thick, .78);
+      strokePath([[cx+size*.95,cy-size*.82],[cx,cy],[cx+size*.95,cy+size*.82]], rightColor, thin, .30);
+    } else if (type === 'bf') {
+      strokePath([[cx+size*.95,cy-size*.82],[cx,cy],[cx+size*.95,cy+size*.82]], rightColor, thick, .78);
+      strokePath([[cx-size*.95,cy-size*.82],[cx,cy],[cx-size*.95,cy+size*.82]], leftColor, thin, .30);
+    } else {
+      strokePath([[cx-size*.95,cy-size*.82],[cx+size*.95,cy+size*.82]], leftColor, thick, leftDominant ? .78 : .30);
+      strokePath([[cx+size*.95,cy-size*.82],[cx-size*.95,cy+size*.82]], rightColor, thick, rightDominant ? .78 : .30);
+    }
+
     ctx.globalAlpha=.18;
     ctx.strokeStyle='#0f172a';
     ctx.lineWidth=Math.max(1, size*.10);
@@ -335,10 +489,11 @@ function renderPreview() {
     const cx = startX + pos * xStep + rowOffset;
     const cy = startY + k.row * yStep;
 
-    const fill = knotFill(k.left,k.row);
-    const type = knotType(k.row,k.left);
-    const leftColor = threadColor(k.left,k.row);
-    const rightColor = threadColor(k.right,k.row);
+    const visual = knotVisual(k.row,k.left);
+    const fill = visual.fill;
+    const type = visual.type;
+    const leftColor = visual.leftColor;
+    const rightColor = visual.rightColor;
     const size = tileH * .43;
 
     if (state.previewStyle === 'circles') {
@@ -401,6 +556,15 @@ function svgLine(parent,x1,y1,x2,y2,cls,stroke,width) {
   l.setAttribute('x1',x1); l.setAttribute('y1',y1); l.setAttribute('x2',x2); l.setAttribute('y2',y2);
   l.setAttribute('class',cls); l.setAttribute('stroke',stroke); l.setAttribute('stroke-width',width); parent.appendChild(l);
 }
+function svgPath(parent,d,cls,stroke,width) {
+  const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+  p.setAttribute('d',d);
+  p.setAttribute('class',cls);
+  p.setAttribute('stroke',stroke);
+  p.setAttribute('stroke-width',width);
+  parent.appendChild(p);
+}
+
 function arrowHeadPoints(x1,y1,x2,y2,headLen,headWidth) {
   const len = Math.hypot(x2-x1, y2-y1) || 1;
   const ux = (x2-x1)/len, uy = (y2-y1)/len;
@@ -425,23 +589,54 @@ function polylineArrowMarkup(points, stroke, width) {
 function knotGlyphMarkup(type, x, y, size, stroke='#111827', width=3.1) {
   switch(type) {
     case 'f':
+      // nœud avant : haut gauche -> bas droite
       return arrowMarkup(x-size*.42, y-size*.42, x+size*.34, y+size*.34, stroke, width);
     case 'b':
+      // nœud arrière : haut droite -> bas gauche
       return arrowMarkup(x+size*.42, y-size*.42, x-size*.34, y+size*.34, stroke, width);
     case 'fb':
-      return polylineArrowMarkup([[x+size*.34, y-size*.40], [x-size*.02, y], [x-size*.34, y+size*.38]], stroke, width);
+      // avant-arrière : le fil part à gauche, va à droite, puis revient à gauche
+      return polylineArrowMarkup([[x-size*.36, y-size*.40], [x+size*.34, y], [x-size*.34, y+size*.38]], stroke, width);
     case 'bf':
-      return polylineArrowMarkup([[x-size*.34, y-size*.40], [x+size*.02, y], [x+size*.34, y+size*.38]], stroke, width);
+      // arrière-avant : le fil part à droite, va à gauche, puis revient à droite
+      return polylineArrowMarkup([[x+size*.36, y-size*.40], [x-size*.34, y], [x+size*.34, y+size*.38]], stroke, width);
     default:
       return arrowMarkup(x-size*.42, y-size*.42, x+size*.34, y+size*.34, stroke, width);
   }
 }
+function knotStrandsMarkup(type, x, y, size, leftColor, rightColor, width=12) {
+  const leftStrong = type === 'f' || type === 'fb';
+  const rightStrong = type === 'b' || type === 'bf';
+  const opL = leftStrong ? 1 : .38;
+  const opR = rightStrong ? 1 : .38;
+
+  if (type === 'fb') {
+    return `
+      <path d="M ${x-size*.86} ${y-size*.84} L ${x} ${y} L ${x-size*.86} ${y+size*.84}" stroke="${leftColor}" stroke-width="${width}" opacity="${opL}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M ${x+size*.86} ${y-size*.84} L ${x} ${y} L ${x+size*.86} ${y+size*.84}" stroke="${rightColor}" stroke-width="${width*.72}" opacity="${opR}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    `;
+  }
+
+  if (type === 'bf') {
+    return `
+      <path d="M ${x+size*.86} ${y-size*.84} L ${x} ${y} L ${x+size*.86} ${y+size*.84}" stroke="${rightColor}" stroke-width="${width}" opacity="${opR}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M ${x-size*.86} ${y-size*.84} L ${x} ${y} L ${x-size*.86} ${y+size*.84}" stroke="${leftColor}" stroke-width="${width*.72}" opacity="${opL}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    `;
+  }
+
+  return `
+    <line x1="${x-size*.86}" y1="${y-size*.84}" x2="${x+size*.86}" y2="${y+size*.84}" stroke="${leftColor}" stroke-width="${width}" stroke-linecap="round" opacity="${opL}" />
+    <line x1="${x+size*.86}" y1="${y-size*.84}" x2="${x-size*.86}" y2="${y+size*.84}" stroke="${rightColor}" stroke-width="${width}" stroke-linecap="round" opacity="${opR}" />
+  `;
+}
 function knotCardMarkup(type) {
+  const leftColor = '#b8d93a';
+  const rightColor = '#b4001c';
+  const circleColor = (type === 'f' || type === 'fb') ? leftColor : leftColor;
   return `<svg viewBox="0 0 96 96" width="70" height="70" aria-hidden="true">
     <rect x="3" y="3" width="90" height="90" rx="0" fill="#fff" stroke="#ef4444" stroke-width="6"/>
-    <line x1="9" y1="9" x2="87" y2="87" stroke="#b8d93a" stroke-width="11" stroke-linecap="round"/>
-    <line x1="87" y1="9" x2="9" y2="87" stroke="#b4001c" stroke-width="11" stroke-linecap="round"/>
-    <circle cx="48" cy="48" r="18" fill="#b8d93a" stroke="#111827" stroke-width="2.5"/>
+    ${knotStrandsMarkup(type, 48, 48, 42, leftColor, rightColor, 12)}
+    <circle cx="48" cy="48" r="18" fill="${circleColor}" stroke="#111827" stroke-width="2.5"/>
     <g>${knotGlyphMarkup(type, 48, 48, 18, '#111827', 3.2)}</g>
   </svg>`;
 }
@@ -457,13 +652,19 @@ function drawNode(x,y,fill,type,idx) {
   if (state.weave && !state.editKnots && idx===state.next) g.classList.add('next');
   if (state.editKnots) g.classList.add('editing');
   if (state.editColors) g.classList.add('colorEditing');
+
   const circle=document.createElementNS('http://www.w3.org/2000/svg','circle');
-  circle.setAttribute('cx',x); circle.setAttribute('cy',y); circle.setAttribute('r',23); circle.setAttribute('fill',fill); g.appendChild(circle);
-  const t=document.createElementNS('http://www.w3.org/2000/svg','text');
-  const symbols={f:'↘',b:'↙',fb:'↘↙',bf:'↙↘'};
-  t.textContent=symbols[type]||'↘'; t.setAttribute('x',x); t.setAttribute('y',y+1);
-  t.setAttribute('class','knotText '+(hexBrightness(fill)<140?'light':''));
-  g.appendChild(t);
+  circle.setAttribute('cx',x);
+  circle.setAttribute('cy',y);
+  circle.setAttribute('r',23);
+  circle.setAttribute('fill',fill);
+  g.appendChild(circle);
+
+  const glyph=document.createElementNS('http://www.w3.org/2000/svg','g');
+  glyph.setAttribute('class','knot-glyph');
+  glyph.innerHTML = knotGlyphMarkup(type, x, y, 18, hexBrightness(fill)<140 ? '#ffffff' : '#111827', 3.2);
+  g.appendChild(glyph);
+
   g.addEventListener('click',()=>onKnotClick(idx));
   svg.appendChild(g);
 }
@@ -510,15 +711,26 @@ function renderPattern() {
     for (let left=start;left<state.threads-1;left+=2) {
       const right=left+1;
       const x1=marginL+left*gapX, x2=marginL+right*gapX, x=(x1+x2)/2;
-      const type=knotType(r,left);
-      const colorLeft=threadColor(left,r), colorRight=threadColor(right,r);
-      const mainFirst=type==='f'||type==='fb';
-      svgLine(svg,x1,y-25,x2,y+25,'threadLine'+(mainFirst?'':' threadGhost'),colorLeft,mainFirst?13:9);
-      svgLine(svg,x2,y-25,x1,y+25,'threadLine'+(!mainFirst?'':' threadGhost'),colorRight,!mainFirst?13:9);
-      drawNode(x,y,knotFill(left,r),type,idx++);
+      const visual=knotVisual(r,left);
+      const type=visual.type;
+      const colorLeft=visual.leftColor, colorRight=visual.rightColor;
+      const mainFirst=isLeftDominant(type);
+
+      if (type === 'fb') {
+        svgPath(svg,`M ${x1} ${y-25} L ${x} ${y} L ${x1} ${y+25}`,'threadPath',colorLeft,13);
+        svgPath(svg,`M ${x2} ${y-25} L ${x} ${y} L ${x2} ${y+25}`,'threadPath threadGhost',colorRight,9);
+      } else if (type === 'bf') {
+        svgPath(svg,`M ${x2} ${y-25} L ${x} ${y} L ${x2} ${y+25}`,'threadPath',colorRight,13);
+        svgPath(svg,`M ${x1} ${y-25} L ${x} ${y} L ${x1} ${y+25}`,'threadPath threadGhost',colorLeft,9);
+      } else {
+        svgLine(svg,x1,y-25,x2,y+25,'threadLine'+(mainFirst?'':' threadGhost'),colorLeft,mainFirst?13:9);
+        svgLine(svg,x2,y-25,x1,y+25,'threadLine'+(!mainFirst?'':' threadGhost'),colorRight,!mainFirst?13:9);
+      }
+
+      drawNode(x,y,visual.fill,type,idx++);
     }
   }
-  svgText(svg,'Version 20 · Nœuds brésiliens · Créé avec Calie',marginL,contentH-42,'footer-note');
+  svgText(svg,'Version 23 · Nœuds de retour corrigés · Créé avec Calie',marginL,contentH-42,'footer-note');
 }
 function onKnotClick(idx) {
   const knots = buildKnotList();
@@ -551,18 +763,22 @@ function currentKnotMeta() {
 }
 function renderCurrentKnotPreview() {
   const k=currentKnotMeta();
-  const fill=knotFill(k.left,k.row);
-  const leftColor=threadColor(k.left,k.row), rightColor=threadColor(k.right,k.row);
-  const mainLeft = k.type==='f' || k.type==='fb';
-  const mainRight = k.type==='b' || k.type==='bf';
+  const visual = knotVisual(k.row,k.left,k.type);
+  const fill=visual.fill;
+  const leftColor=visual.leftColor, rightColor=visual.rightColor;
+  const mainLeft = isLeftDominant(k.type);
+  const mainRight = !mainLeft;
   currentKnotPreview.innerHTML=`
     <rect x="8" y="8" width="144" height="124" rx="14" fill="#ffffff" stroke="#ef4444" stroke-width="4" />
-    <line x1="28" y1="20" x2="132" y2="120" stroke="${leftColor}" stroke-width="15" stroke-linecap="round" opacity="${mainLeft?'1':'.42'}" />
-    <line x1="132" y1="20" x2="28" y2="120" stroke="${rightColor}" stroke-width="15" stroke-linecap="round" opacity="${mainRight?'1':'.42'}" />
+    ${knotStrandsMarkup(k.type, 80, 70, 54, leftColor, rightColor, 15)}
     <circle cx="80" cy="70" r="30" fill="${fill}" stroke="#1f2a44" stroke-width="2.5" />
     <g>${knotGlyphMarkup(k.type, 80, 70, 23, hexBrightness(fill)<140 ? '#ffffff' : '#111827', 4)}</g>
   `;
-  $('#currentKnotText').textContent=state.editColors ? `Mode couleurs : choisis une couleur puis touche les cercles du patron.` : (state.editKnots ? `Mode flèches : touche un cercle pour changer sa flèche.` : `Fais le nœud entre ${letter(k.left)} et ${letter(k.right)}, rangée ${k.row+1}.`);
+  $('#currentKnotText').textContent=state.editColors
+    ? `Mode couleurs : choisis une couleur puis touche un cercle. La flèche s’adapte et le changement se propage.`
+    : (state.editKnots
+      ? `Mode flèches : touche un cercle. Les nœuds de retour reviennent du bon côté et les couleurs se propagent.`
+      : `Fais le nœud entre ${letter(k.left)} et ${letter(k.right)}, rangée ${k.row+1}.`);
 }
 function renderPalette() {
   normalizeAll();
@@ -616,7 +832,7 @@ function renderInfo() {
   $('#modeBadge').textContent=state.editColors?'Mode édition des couleurs':(state.editKnots?'Mode édition des flèches':(state.weave?'Mode tissage actif':'Mode normal'));
   $('#weaveStateBadge').textContent=(state.editKnots||state.editColors)?'Pause édition':(state.weave?'Actif':'Inactif');
   $('#weaveStateBadge').classList.toggle('active',state.weave && !state.editKnots && !state.editColors);
-  $('#infoBox').innerHTML=`Type : <b>${state.type==='alpha'?'Alpha':'Normal'}</b><br>Fils : <b>${state.threads}</b> ${state.threads%2?'· impair':'· pair'}<br>Rangées : <b>${state.rows}</b><br>Motif : <b>${state.motifWidth}×${state.motifHeight}</b><br>Couleurs : <b>${state.colorCount}</b><br>Nœuds : <b>${totalKnots()}</b><br>Flèches modifiées : <b>${Object.keys(state.customKnots||{}).length}</b><br>Couleurs modifiées sur le patron : <b>${Object.keys(state.customColors||{}).length}</b>`;
+  $('#infoBox').innerHTML=`Type : <b>${state.type==='alpha'?'Alpha':'Normal'}</b><br>Fils : <b>${state.threads}</b> ${state.threads%2?'· impair':'· pair'}<br>Rangées : <b>${state.rows}</b><br>Motif : <b>${state.motifWidth}×${state.motifHeight}</b><br>Couleurs : <b>${state.colorCount}</b><br>Nœuds : <b>${totalKnots()}</b><br>Flèches modifiées : <b>${Object.keys(state.customKnots||{}).length}</b><br>Couleurs modifiées sur le patron : <b>${Object.keys(state.customColors||{}).length}</b><br>Propagation : <b>active</b>`;
   const editBtn=$('#editKnotsToggle'); if(editBtn){editBtn.classList.toggle('active',state.editKnots); editBtn.textContent=state.editKnots?'Édition flèches active':'Modifier les flèches';}
   const colorEditBtn=$('#editColorsToggle'); if(colorEditBtn){colorEditBtn.classList.toggle('active',state.editColors); colorEditBtn.textContent=state.editColors?'Édition couleurs active':'Modifier les couleurs';}
   const total=totalKnots();
@@ -630,6 +846,7 @@ function resetWeave(){ state.done=new Set(); state.next=0; }
 function renderAll() {
   normalizeAll();
   cleanCustomEdits();
+  threadRowsCache = null;
   const max=totalKnots();
   state.done=new Set([...state.done].filter(v=>v>=0&&v<max));
   state.next=clamp(state.next,0,max);
@@ -637,7 +854,7 @@ function renderAll() {
 }
 function exportPreviewPng() {
   const link=document.createElement('a');
-  link.download='bracelet-studio-by-calie-v20.png';
+  link.download='bracelet-studio-by-calie-v23.png';
   link.href=previewCanvas.toDataURL('image/png');
   link.click();
 }
