@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'braceletStudioByCalieV23';
+const STORAGE_KEY = 'braceletStudioByCalieV24';
 const DEFAULT_COLORS = ['#A8D8F0','#3D5CB3','#EF0B0B','#90EAAE','#FFFFFF','#26408B','#F6C9D9','#7FC8B7','#111827','#F4E8B2','#7A4CBC','#13A4C8'];
 
 const state = {
@@ -18,6 +18,7 @@ const state = {
   editColors: false,
   customKnots: {},
   customColors: {},
+  threadColors: [],
   zoom: 1,
   weave: true,
   next: 0,
@@ -59,6 +60,12 @@ function normalizeAll() {
   if (state.colors.length > state.colorCount) state.colors = state.colors.slice(0, state.colorCount);
   state.selectedColor = clamp(Number(state.selectedColor)||0, 0, state.colorCount-1);
   if (!['knots','circles','diamonds'].includes(state.previewStyle)) state.previewStyle = 'knots';
+  if (!Array.isArray(state.threadColors)) state.threadColors = [];
+  for (let i=0; i<state.threads; i++) {
+    if (state.threadColors[i] === undefined) state.threadColors[i] = i % state.colorCount;
+    state.threadColors[i] = clamp(Number(state.threadColors[i]) || 0, 0, state.colorCount-1);
+  }
+  if (state.threadColors.length > state.threads) state.threadColors = state.threadColors.slice(0, state.threads);
   ensureMotif();
 }
 function ensureMotif() {
@@ -98,8 +105,19 @@ function isSwapFamily(type) {
 }
 function initialThreadIndexes() {
   const arr = [];
-  for (let i=0; i<state.threads; i++) arr.push(colorAtMotif(i,0) % state.colors.length);
+  for (let i=0; i<state.threads; i++) {
+    const chosen = Array.isArray(state.threadColors) && state.threadColors[i] !== undefined
+      ? state.threadColors[i]
+      : i % state.colorCount;
+    arr.push(chosen % state.colors.length);
+  }
   return arr;
+}
+function setThreadColor(threadIndex,colorIndex) {
+  if (!Array.isArray(state.threadColors)) state.threadColors = [];
+  state.threadColors[threadIndex] = colorIndex % state.colors.length;
+  threadRowsCache = null;
+  resetWeave();
 }
 function applyKnotToThreadRow(before, row, left) {
   const type = knotType(row,left);
@@ -730,7 +748,7 @@ function renderPattern() {
       drawNode(x,y,visual.fill,type,idx++);
     }
   }
-  svgText(svg,'Version 23 · Nœuds de retour corrigés · Créé avec Calie',marginL,contentH-42,'footer-note');
+  svgText(svg,'Version 24 · Couleurs des fils · Créé avec Calie',marginL,contentH-42,'footer-note');
 }
 function onKnotClick(idx) {
   const knots = buildKnotList();
@@ -787,19 +805,16 @@ function renderPalette() {
   state.colors.forEach((hex,i)=>{
     const row=document.createElement('div');
     row.className='palette-row';
-    row.innerHTML=`<div class="index-badge">${i+1}</div><button class="palette-swatch ${i===state.selectedColor?'active':''}" style="background:${hex}" title="Couleur ${i+1}"></button><code>${hex.toUpperCase()}</code><button class="icon-btn ghost" title="Supprimer">✕</button>`;
+    row.innerHTML=`<div class="index-badge">${i+1}</div><button class="palette-swatch ${i===state.selectedColor?'active':''}" style="background:${hex}" title="Choisir couleur ${i+1}"></button><code>${hex.toUpperCase()}</code><button class="edit-color-btn ghost" title="Modifier au disque">🎨</button><button class="icon-btn ghost" title="Supprimer">✕</button>`;
     row.querySelector('.palette-swatch').onclick=()=>{
       state.selectedColor=i;
-      const picker=$('#colorPicker');
-      picker.value=hex;
-      picker.oninput=(e)=>{ state.colors[i]=e.target.value.toUpperCase(); renderAll(); };
       renderAll();
     };
     row.querySelector('.palette-swatch').ondblclick=()=>{
-      const picker=$('#colorPicker');
-      picker.value=hex;
-      picker.oninput=(e)=>{ state.colors[i]=e.target.value.toUpperCase(); renderAll(); };
-      picker.click();
+      openPalettePicker(i);
+    };
+    row.querySelector('.edit-color-btn').onclick=()=>{
+      openPalettePicker(i);
     };
     row.querySelector('.icon-btn').onclick=()=>{
       if (state.colorCount<=2) return;
@@ -807,6 +822,8 @@ function renderPalette() {
       state.colorCount--;
       state.selectedColor=clamp(state.selectedColor,0,state.colorCount-1);
       for (let r=0;r<state.motifHeight;r++) for (let c=0;c<state.motifWidth;c++) state.motif[r][c]%=state.colorCount;
+      state.threadColors = (state.threadColors || []).map(v => v % state.colorCount);
+      threadRowsCache = null;
       resetWeave(); renderAll();
     };
     list.appendChild(row);
@@ -816,6 +833,43 @@ function renderPalette() {
     btn.style.background=state.colors[state.selectedColor];
     btn.style.color=hexBrightness(state.colors[state.selectedColor])<140?'#fff':'#111827';
     btn.textContent=`Couleur active ${state.selectedColor+1}`;
+  }
+}
+function openPalettePicker(i) {
+  const picker=$('#colorPicker');
+  picker.value=state.colors[i];
+  picker.oninput=(e)=>{
+    state.colors[i]=e.target.value.toUpperCase();
+    threadRowsCache = null;
+    renderAll();
+  };
+  picker.click();
+}
+function renderThreadAssignments() {
+  const box = $('#threadColorList');
+  if (!box) return;
+  normalizeAll();
+  box.innerHTML = '';
+
+  for (let i=0; i<state.threads; i++) {
+    const row = document.createElement('div');
+    row.className = 'thread-color-row';
+    const selected = state.threadColors[i] % state.colors.length;
+    const options = state.colors.map((hex, idx)=>`<option value="${idx}" ${idx===selected?'selected':''}>Couleur ${idx+1} · ${hex.toUpperCase()}</option>`).join('');
+    row.innerHTML = `
+      <div class="thread-letter">${letter(i)}</div>
+      <div class="thread-color-chip" style="background:${state.colors[selected]}"></div>
+      <select aria-label="Couleur du fil ${letter(i)}">${options}</select>
+    `;
+    row.querySelector('select').onchange = (e)=>{
+      setThreadColor(i, Number(e.target.value));
+      renderAll();
+    };
+    row.querySelector('.thread-color-chip').onclick = ()=>{
+      state.selectedColor = selected;
+      openPalettePicker(selected);
+    };
+    box.appendChild(row);
   }
 }
 function renderInfo() {
@@ -850,11 +904,11 @@ function renderAll() {
   const max=totalKnots();
   state.done=new Set([...state.done].filter(v=>v>=0&&v<max));
   state.next=clamp(state.next,0,max);
-  renderPalette(); renderInfo(); renderPreview(); renderMotifEditor(); renderPattern(); renderCurrentKnotPreview(); renderLegendIcons(); saveState();
+  renderPalette(); renderThreadAssignments(); renderInfo(); renderPreview(); renderMotifEditor(); renderPattern(); renderCurrentKnotPreview(); renderLegendIcons(); saveState();
 }
 function exportPreviewPng() {
   const link=document.createElement('a');
-  link.download='bracelet-studio-by-calie-v23.png';
+  link.download='bracelet-studio-by-calie-v24.png';
   link.href=previewCanvas.toDataURL('image/png');
   link.click();
 }
@@ -875,6 +929,14 @@ function bindUI() {
   $('#checkerPreset').onclick=()=>setPreset('checker');
   $('#stripePreset').onclick=()=>setPreset('stripe');
   $('#clearPreset').onclick=()=>setPreset('clear');
+  const resetThreadColorsBtn=$('#resetThreadColorsBtn');
+  if (resetThreadColorsBtn) resetThreadColorsBtn.onclick=()=>{
+    state.threadColors = [];
+    for (let i=0; i<state.threads; i++) state.threadColors[i] = i % state.colorCount;
+    threadRowsCache = null;
+    resetWeave();
+    renderAll();
+  };
   $('#showRows').onchange=e=>{state.showRows=e.target.checked;renderAll();};
   $('#showLetters').onchange=e=>{state.showLetters=e.target.checked;renderAll();};
   $('#showPreviewGrid').onchange=e=>{state.showPreviewGrid=e.target.checked;renderAll();};
